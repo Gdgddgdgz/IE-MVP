@@ -1,42 +1,101 @@
-# DGCare - Phase 2 MVP
+# DGCare 🛡️💚
+> Trusted Care for the Ones Who Matter Most.
 
-DGCare is a complete, real-time caregiver and family monitoring platform built to ensure the safety and tracking of loved ones.
+DGCare is a comprehensive web platform designed to connect families with background-checked, trusted caregivers. With a focus on safety and transparency, the platform allows families to book caregivers, track their real-time location during active sessions, and provides caregivers with a complete scheduling dashboard.
 
-## 🚀 Tech Stack
-- **Frontend & API:** Next.js (App Router), React
-- **Real-time Engine:** Socket.io & WebSockets running inside a custom Next.js Node container
-- **Maps Location:** Leaflet & React-Leaflet
-- **Database:** MongoDB (Mongoose Schema ready)
-- **Styling:** Premium Vanilla CSS Custom Properties (Deep Pine Green Theme)
+## 🌟 Overview
+Built for two key user roles:
+- **Families:** Find and book verified care professionals, monitor real-time caregiver locations, and trigger SOS alerts if needed.
+- **Caregivers:** Manage service schedules, handle bookings, and update their live location during care sessions.
 
-## 🌟 Core Features
-1. **Divergent Dashboards:** Entirely separate UI/UX experiences for Family (Monitoring) and Caregiver (Broadcasting).
-2. **Server-Side PIN Pairing:** Caregivers generate a 4-Digit session PIN that Family members type into their dashboard to securely link the live tracking Room!
-3. **Live GPS Emulation:** Once authenticated, the Caregiver dashboard emits movement data to the Family's Leaflet layout.
-4. **Instant SOS Alerts:** True Socket.io push dispatch alerts connected clients instantly within their PIN room.
+## ✨ Features
 
-## 💻 Getting Started Locally
+- **Role-Based Authentication:** Dedicated login and registration flows for both Families and Caregivers.
+- **Dedicated Dashboards:** 
+  - Family Dashboard for managing bookings and tracking.
+  - Caregiver Dashboard for visualizing daily and upcoming schedules.
+- **Interactive Booking System:** Families can seamlessly view and book available caregivers.
+- **Schedule Management:** Caregivers can view their service times and ongoing tasks.
+- **Real-Time GPS Map Integration:** Live map tracking functionality using React-Leaflet and WebSockets to update the caregiver's location dynamically for the family.
+- **Emergency SOS System:** Built-in instant alert mechanism via WebSockets for critical situations.
 
-### 1. Requirements
-- Node.js (v18+)
-- Local MongoDB installation, or replace the URI with a Cloud cluster.
+## 🛠 Tech Stack
 
-### 2. Installation
-Ensure you are in the project folder and install dependencies:
+**Frontend:**
+- **Framework:** [Next.js 14](https://nextjs.org/) & [React 18](https://react.dev/)
+- **Mapping:** [Leaflet](https://leafletjs.com/) & `react-leaflet`
+- **Icons:** `lucide-react`
+- **Styling:** Custom CSS & inline-styled components (Responsive & Accessible)
+
+**Backend:**
+- **Server:** Custom Node.js HTTP Application Server
+- **Real-time Engine:** [Socket.io](https://socket.io/) (for Live GPS tracking and SOS Alerts)
+- **Database:** [MongoDB](https://www.mongodb.com/) using [Mongoose](https://mongoosejs.com/) ORM
+
+## 📂 Project Structure
+
+```text
+├── server.js              # Custom Node.js server handling Next.js routing AND Socket.io WebSockets
+├── src/
+│   ├── app/               # Next.js App Router root
+│   │   ├── dashboard/     # Role-based dashboards
+│   │   │   ├── family/    # Family booking and tracking interfaces
+│   │   │   └── caregiver/ # Caregiver scheduling and management views
+│   │   ├── login/         # Authentication logic
+│   │   └── register/      # User onboarding flows
+│   ├── components/        # Reusable React components
+│   │   ├── Map.tsx        # Leaflet Map integration for live tracking
+│   │   ├── Sidebar.tsx    # App navigation sidebar
+│   │   └── SkeletonLoader.tsx # Loading state visualizations
+│   └── lib/               # Utility functions and Database logic
+│       ├── mongodb.ts     # MongoDB connection setup
+│       └── models/        # Mongoose Data Models (User, Caregiver)
+```
+
+## 🚀 Setup Instructions
+
+Follow these steps to get the project running locally:
+
+### 1. Clone & Install Dependencies
+Ensure you have Node.js (v18+) installed.
+
 ```bash
+git clone <your-repo-url>
+cd IE-MVP
 npm install
 ```
 
-### 3. Setup Environment Variables (Optional)
-If you wish to change the database, create a `.env.local` and add:
-```bash
-MONGODB_URI=mongodb://localhost:27017/dgcare
+### 2. Environment Variables
+Create a `.env.local` file in the root directory and add the following variables:
+*(Example configuration)*
+```env
+# MongoDB Connection String
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/dgcare
+# Other necessary API keys (if applicable)
 ```
 
-### 4. Run the Custom Server
-Because this project strictly requires WebSockets alongside Next.js rendering, you must run it through the custom server script:
+### 3. Run the Development Server
+Because DGCare utilizes a custom Node.js server for WebSocket support, start the app using `node server.js` directly via the npm dev script:
+
 ```bash
 npm run dev
 ```
 
-The platform is now fully accessible at **http://localhost:3000**!
+The application should now be running on [http://localhost:3000](http://localhost:3000).
+
+## 📸 Screenshots
+
+| Landing Page | Family Booking | Live Tracking (Map) |
+| --- | --- | --- |
+| *[Placeholder for Home Screen]* | *[Placeholder for Booking View]* | *[Placeholder for Map/GPS View]* |
+
+## 🔮 Future Improvements
+
+Based on the MVP structure, here are potential roadmap features:
+- **Payment Gateway Integration:** Stripe/PayPal to handle caregiver payouts directly.
+- **Rating & Review System:** Allowing families to rate caregivers for accountability.
+- **In-App Messaging:** Secure chat channels between families and scheduled caregivers.
+- **Push Notifications:** Web-push or email updates regarding booking confirmations or SOS alerts.
+
+## ✍️ Author
+- Built with ❤️ for families and caregivers.
