@@ -24,12 +24,12 @@ export default function Register() {
           <p style={{ color: 'var(--text-light)', marginBottom: '32px', textAlign: 'center' }}>Experience peace of mind with our curated care network.</p>
           
           <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ display: 'flex', gap: '16px' }}>
-                <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                <div style={{ flex: '1 1 200px' }}>
                     <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>Full Name</label>
                     <input type="text" required value={name} onChange={e => setName(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: '8px', border: '1px solid var(--border-light)' }} placeholder="Alex Smith" />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: '1 1 200px' }}>
                     <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>I am a...</label>
                     <select value={role} onChange={e => setRole(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: '8px', border: '1px solid var(--border-light)' }}>
                         <option value="family">Family Member</option>

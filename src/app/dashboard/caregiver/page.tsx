@@ -1,16 +1,17 @@
+// FIXED
 'use client';
 import { useEffect, useState, useRef } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
-import { Bell, MapPin, Calendar, Clock, AlertTriangle, ShieldCheck, FileCheck } from 'lucide-react';
+import { AlertTriangle, FileCheck } from 'lucide-react';
 import io from 'socket.io-client';
+import Sidebar from '@/components/Sidebar';
+import { FullPageSkeleton } from '@/components/SkeletonLoader';
 
 const Map = dynamic(() => import('@/components/Map'), { ssr: false });
 
 export default function CaregiverDashboard() {
   const router = useRouter();
-  const pathname = usePathname();
   const [user, setUser] = useState<{ email: string, role: string, name?: string } | null>(null);
   const [sosActive, setSosActive] = useState(false);
   const [myPin, setMyPin] = useState('1234');
@@ -65,37 +66,14 @@ export default function CaregiverDashboard() {
      }, 2000);
   };
 
-  if (!user) return <div style={{ padding: '40px', color: 'var(--primary-green)' }}>Loading Dashboard...</div>;
-
-  const isActive = (path: string) => pathname === path ? 'var(--accent-green)' : 'transparent';
+  if (!user) return <FullPageSkeleton role="caregiver" />;
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-offwhite)' }}>
-      <div style={{ width: '250px', backgroundColor: '#093a31', color: 'white', padding: '24px', display: 'flex', flexDirection: 'column' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '40px' }}>DGCare Provider</h2>
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
-          <Link href="/dashboard/caregiver" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: isActive('/dashboard/caregiver'), borderRadius: '8px' }}>
-             <ShieldCheck size={20} /> Shift Control
-          </Link>
-          <Link href="/dashboard/caregiver/schedule" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: isActive('/dashboard/caregiver/schedule'), borderRadius: '8px' }}>
-             <Clock size={20} /> Booking Schedule
-          </Link>
-        </nav>
-        <div style={{ marginTop: 'auto', padding: '16px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '40px', height: '40px', backgroundColor: '#fff', borderRadius: '50%', color: '#093a31', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>C</div>
-            <div style={{ overflow: 'hidden' }}>
-              <div style={{ fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  {user.name || 'Pro Caregiver'} {isVerified && <span title="Verified">✅</span>}
-              </div>
-              <div style={{ fontSize: '12px', opacity: 0.8 }}>Professional</div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="dashboard-layout">
+      <Sidebar role="caregiver" userName={user.name || ''} isVerified={isVerified} />
 
-      <div style={{ flex: 1, padding: '40px', display: 'flex', flexDirection: 'column', gap: '30px' }}>
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="main-content">
+        <header className="header-flex">
           <div>
             <h1 style={{ fontSize: '32px', color: '#093a31', fontWeight: 'bold' }}>Shift Control Center</h1>
             <p style={{ color: 'var(--text-light)' }}>Manage your shifts, broadcast location, and keep families updated.</p>
@@ -114,7 +92,7 @@ export default function CaregiverDashboard() {
         )}
 
         {!isVerified && (
-           <div style={{ backgroundColor: '#fffbe1', border: '2px solid #fde047', padding: '24px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+           <div className="card-flex" style={{ backgroundColor: '#fffbe1', border: '2px solid #fde047', padding: '24px', borderRadius: '12px', justifyContent: 'space-between' }}>
                <div>
                    <h3 style={{ fontSize: '18px', color: '#854d0e', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                        <FileCheck size={20} /> Identity Verification Required
@@ -127,7 +105,7 @@ export default function CaregiverDashboard() {
            </div>
         )}
 
-        <div style={{ backgroundColor: broadcasting ? 'var(--primary-green)' : 'white', color: broadcasting ? 'white' : 'var(--text-dark)', padding: '30px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: '0.3s all' }}>
+        <div className="card-flex" style={{ backgroundColor: broadcasting ? 'var(--primary-green)' : 'white', color: broadcasting ? 'white' : 'var(--text-dark)', padding: '30px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', justifyContent: 'space-between', transition: '0.3s all' }}>
            <div>
                <h3 style={{ fontSize: '24px', marginBottom: '8px' }}>{broadcasting ? '🟢 Live Broadcasting Active' : '🔴 Off-Duty'}</h3>
                <p style={{ fontSize: '14px', opacity: 0.9 }}>Provide this PIN to your assigned family member so they can track your arrival and status.</p>
@@ -143,8 +121,8 @@ export default function CaregiverDashboard() {
 
         {broadcasting ? (
             <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <h3 style={{ fontSize: '20px', color: 'var(--primary-green)', marginBottom: '20px', fontWeight: 'bold' }}>Your Emitted Location</h3>
-                <div style={{ flex: 1 }}>
+                <h3 style={{ fontSize: '20px', color: 'var(--primary-green)', margin: '0 0 20px', fontWeight: 'bold' }}>Your Emitted Location</h3>
+                <div className="map-container">
                    <Map center={[51.505, -0.09]} role="caregiver" roomCode={`room_${myPin}`} />
                 </div>
             </div>
