@@ -1,11 +1,10 @@
 'use client';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 
-// Fix for default marker icon in Next.js
 let DefaultIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
@@ -13,6 +12,19 @@ let DefaultIcon = L.icon({
   iconAnchor: [12, 41]
 });
 L.Marker.prototype.options.icon = DefaultIcon;
+
+// Child component to automatically pan the map when location updates
+function LocationMarker({ position }: { position: any }) {
+  const map = useMap();
+  useEffect(() => {
+     if(position) map.flyTo(position, map.getZoom(), { duration: 1.5 });
+  }, [position, map]);
+  return position === null ? null : (
+    <Marker position={position}>
+      <Popup>Caregiver Location</Popup>
+    </Marker>
+  );
+}
 
 export default function Map({ center = [51.505, -0.09], role = 'family', roomCode = 'room_123' }: { center?: any, role?: string, roomCode?: string }) {
   const [caregiverLocation, setCaregiverLocation] = useState(center);
@@ -26,36 +38,36 @@ export default function Map({ center = [51.505, -0.09], role = 'family', roomCod
       setCaregiverLocation([data.lat, data.lng]);
     });
 
-    let interval: NodeJS.Timeout;
+    let watchId: number;
     if (role === 'caregiver') {
-      interval = setInterval(() => {
-        setCaregiverLocation((prev: any[]) => {
-          const newLat = prev[0] + (Math.random() - 0.5) * 0.001;
-          const newLng = prev[1] + (Math.random() - 0.5) * 0.001;
+      if ('geolocation' in navigator) {
+        watchId = navigator.geolocation.watchPosition((position) => {
+          const newLat = position.coords.latitude;
+          const newLng = position.coords.longitude;
+          setCaregiverLocation([newLat, newLng]);
           socketRef.current.emit('location_update', { roomId: roomCode, lat: newLat, lng: newLng });
-          return [newLat, newLng];
-        });
-      }, 5000);
+        }, (error) => {
+          console.error("Error watching location: ", error.message);
+        }, { enableHighAccuracy: true });
+      } else {
+        alert("Geolocation is not supported by your browser");
+      }
     }
 
     return () => {
-      if (interval) clearInterval(interval);
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
+      if (watchId && navigator.geolocation) navigator.geolocation.clearWatch(watchId);
+      if (socketRef.current) socketRef.current.disconnect();
     };
   }, [role, roomCode]);
 
   return (
     <div style={{ height: '400px', width: '100%', borderRadius: '12px', overflow: 'hidden', border: '2px solid var(--primary-green)', zIndex: 0 }}>
-      <MapContainer center={caregiverLocation} zoom={13} scrollWheelZoom={false} style={{ height: '100%', width: '100%', zIndex: 0 }}>
+      <MapContainer center={caregiverLocation} zoom={15} scrollWheelZoom={false} style={{ height: '100%', width: '100%', zIndex: 0 }}>
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution='&copy; OpenStreetMap contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <Marker position={caregiverLocation}>
-          <Popup>Caregiver Current Location ({roomCode})</Popup>
-        </Marker>
+        <LocationMarker position={caregiverLocation} />
       </MapContainer>
     </div>
   );
