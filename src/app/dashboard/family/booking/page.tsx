@@ -78,7 +78,7 @@ function StarRating({ rating }: { rating: number }) {
 export default function FamilyBooking() {
   const router = useRouter();
   const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
+  const [time, setTime] = useState('Morning Shift (8 AM – 12 PM)');
   const [notes, setNotes] = useState('');
   const [prefillCaregiver, setPrefillCaregiver] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -262,9 +262,21 @@ export default function FamilyBooking() {
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-dark)', fontWeight: '600', fontSize: '14px' }}>
-                    <Clock size={14} style={{ display: 'inline', marginRight: '6px' }} />Requested Time Range
+                    <Clock size={14} style={{ display: 'inline', marginRight: '6px' }} />Preferred Shift
                   </label>
-                  <input required type="text" placeholder="e.g. 10:00 AM – 2:00 PM" value={time} onChange={e => setTime(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1.5px solid var(--border-light)', fontSize: '15px', outline: 'none' }} />
+                  <select
+                    required
+                    value={time}
+                    onChange={e => setTime(e.target.value)}
+                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1.5px solid var(--border-light)', fontSize: '15px', outline: 'none', backgroundColor: 'white', cursor: 'pointer', color: 'var(--text-dark)' }}
+                  >
+                    <option value="Morning Shift (8 AM – 12 PM)">🌅 Morning Shift (8 AM – 12 PM)</option>
+                    <option value="Afternoon Shift (12 PM – 4 PM)">☀️ Afternoon Shift (12 PM – 4 PM)</option>
+                    <option value="Evening Shift (4 PM – 8 PM)">🌆 Evening Shift (4 PM – 8 PM)</option>
+                    <option value="Night Shift (8 PM – 8 AM)">🌙 Night Shift (8 PM – 8 AM)</option>
+                    <option value="Full Day (8 AM – 8 PM)">📅 Full Day (8 AM – 8 PM)</option>
+                    <option value="24-Hour Care">🏥 24-Hour Care</option>
+                  </select>
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-dark)', fontWeight: '600', fontSize: '14px' }}>

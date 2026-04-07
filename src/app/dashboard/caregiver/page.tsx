@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { AlertTriangle, FileCheck } from 'lucide-react';
+import { AlertTriangle, FileCheck, Clock3 } from 'lucide-react';
 import io from 'socket.io-client';
 import Sidebar from '@/components/Sidebar';
 import { FullPageSkeleton } from '@/components/SkeletonLoader';
@@ -18,6 +18,7 @@ export default function CaregiverDashboard() {
   const [broadcasting, setBroadcasting] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [verificationPending, setVerificationPending] = useState(false);
   const socketRef = useRef<any>(null);
 
   useEffect(() => {
@@ -31,6 +32,7 @@ export default function CaregiverDashboard() {
     }
     setMyPin(Math.floor(1000 + Math.random() * 9000).toString());
     if(localStorage.getItem('caregiver_verified') === 'true') setIsVerified(true);
+    if(localStorage.getItem('caregiver_verification_pending') === 'true') setVerificationPending(true);
   }, [router]);
 
   useEffect(() => {
@@ -59,11 +61,10 @@ export default function CaregiverDashboard() {
   const handleVerify = () => {
      setVerifying(true);
      setTimeout(() => {
-         setIsVerified(true);
-         localStorage.setItem('caregiver_verified', 'true');
+         setVerificationPending(true);
+         localStorage.setItem('caregiver_verification_pending', 'true');
          setVerifying(false);
-         alert("Background check complete! You are now a Verified Provider.");
-     }, 2000);
+     }, 1500);
   };
 
   if (!user) return <FullPageSkeleton role="caregiver" />;
@@ -73,16 +74,14 @@ export default function CaregiverDashboard() {
       <Sidebar role="caregiver" userName={user.name || ''} isVerified={isVerified} />
 
       <div className="main-content">
-        <header className="header-flex">
+        <header className="mb-8 flex items-center justify-between gap-6">
           <div>
-            <h1 style={{ fontSize: '32px', color: '#093a31', fontWeight: 'bold' }}>Shift Control Center</h1>
-            <p style={{ color: 'var(--text-light)' }}>Manage your shifts, broadcast location, and keep families updated.</p>
+            <h1 className="text-3xl font-black text-primary tracking-tight">Shift Control Center</h1>
+            <p className="text-secondary font-medium">Manage your clinical sessions and broadcast status to families.</p>
           </div>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <button onClick={handleSOS} style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: sosActive ? '0 0 20px rgba(239, 68, 68, 0.6)' : 'none' }}>
-              <AlertTriangle size={20} /> {sosActive ? 'SOS SENT' : 'SEND EMERGENCY'}
-            </button>
-          </div>
+          <button onClick={handleSOS} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold bg-error text-white transition-all ${sosActive ? 'animate-pulse shadow-[0_0_20px_rgba(239,68,68,0.4)]' : ''}`}>
+            <AlertTriangle size={20} /> {sosActive ? 'SOS SENT' : 'SEND EMERGENCY'}
+          </button>
         </header>
 
         {sosActive && (
@@ -91,31 +90,48 @@ export default function CaregiverDashboard() {
           </div>
         )}
 
-        {!isVerified && (
-           <div className="card-flex" style={{ backgroundColor: '#fffbe1', border: '2px solid #fde047', padding: '24px', borderRadius: '12px', justifyContent: 'space-between' }}>
+        {!isVerified && !verificationPending && (
+           <div className="premium-card flex items-center justify-between gap-6 mb-8 bg-yellow-50 border-2 border-yellow-200">
                <div>
-                   <h3 style={{ fontSize: '18px', color: '#854d0e', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                   <h3 className="text-lg font-bold text-yellow-900 flex items-center gap-2">
                        <FileCheck size={20} /> Identity Verification Required
                    </h3>
-                   <p style={{ color: '#a16207', fontSize: '14px' }}>DGCare requires all providers to pass a strict background check before families will book you. Upload a mock ID to simulate this.</p>
+                   <p className="text-sm text-yellow-800">DGCare requires all providers to pass a strict background check before families will book you. Submit your ID documents to begin the process.</p>
                </div>
-               <button onClick={handleVerify} disabled={verifying} style={{ padding: '12px 24px', backgroundColor: '#eab308', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: verifying ? 'not-allowed' : 'pointer' }}>
-                   {verifying ? 'Scanning Databases...' : 'Upload ID & Verify'}
+               <button onClick={handleVerify} disabled={verifying} className="px-6 py-3 bg-yellow-600 text-white font-bold rounded-xl hover:bg-yellow-700 disabled:bg-yellow-300 transition-all">
+                   {verifying ? 'Submitting...' : 'Submit ID Documents'}
                </button>
            </div>
         )}
 
-        <div className="card-flex" style={{ backgroundColor: broadcasting ? 'var(--primary-green)' : 'white', color: broadcasting ? 'white' : 'var(--text-dark)', padding: '30px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', justifyContent: 'space-between', transition: '0.3s all' }}>
-           <div>
-               <h3 style={{ fontSize: '24px', marginBottom: '8px' }}>{broadcasting ? '🟢 Live Broadcasting Active' : '🔴 Off-Duty'}</h3>
-               <p style={{ fontSize: '14px', opacity: 0.9 }}>Provide this PIN to your assigned family member so they can track your arrival and status.</p>
-               <div style={{ fontSize: '32px', letterSpacing: '8px', fontWeight: 'bold', marginTop: '16px', color: broadcasting ? 'var(--secondary-mint)' : 'var(--primary-green)' }}>{myPin}</div>
+        {!isVerified && verificationPending && (
+           <div style={{ backgroundColor: '#fffbeb', border: '2px solid #f59e0b', padding: '20px 24px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+               <div style={{ width: '44px', height: '44px', borderRadius: '50%', backgroundColor: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                   <Clock3 size={22} color="#f59e0b" />
+               </div>
+               <div style={{ flex: 1 }}>
+                   <div style={{ fontWeight: 'bold', color: '#92400e', fontSize: '15px', marginBottom: '3px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                       ⚠️ Verification In Process
+                   </div>
+                   <p style={{ color: '#b45309', fontSize: '13px' }}>Your documents have been received. Our team is conducting the background check — we&apos;ll notify you once complete. This usually takes 1–2 business days.</p>
+               </div>
+               <span style={{ padding: '4px 14px', backgroundColor: '#fef3c7', borderRadius: '99px', color: '#92400e', fontWeight: 'bold', fontSize: '12px', border: '1px solid #f59e0b', flexShrink: 0 }}>PENDING</span>
+           </div>
+        )}
+
+        <div className={`premium-card flex items-center justify-between gap-8 mb-8 border-l-8 transition-all duration-500 ${broadcasting ? 'border-primary bg-primary/5' : 'border-slate-300'}`}>
+           <div className="flex-1">
+               <h3 className={`text-2xl font-black mb-1 flex items-center gap-3 ${broadcasting ? 'text-primary' : 'text-slate-400'}`}>
+                 {broadcasting ? '🟢 Broadcasting Live' : '⚪ Shift Offline'}
+               </h3>
+               <p className="text-sm text-slate-500 max-w-md">Provide this unique PIN to your assigned family member so they can safely track your session and arrival.</p>
+               <div className={`text-4xl font-extrabold tracking-[0.25em] mt-4 font-mono ${broadcasting ? 'text-primary' : 'text-slate-300'}`}>{myPin}</div>
            </div>
            <button onClick={() => {
                 if(!isVerified) { alert("You must be Verified to start a shift!"); return; }
                 setBroadcasting(!broadcasting);
-            }} style={{ padding: '16px 32px', backgroundColor: broadcasting ? '#ef4444' : 'var(--primary-green)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer', opacity: isVerified ? 1 : 0.5 }}>
-               {broadcasting ? 'End Shift & Stop Tracking' : 'Start Shift & Broadcast GPS'}
+            }} className={`px-10 py-5 rounded-[1.25rem] font-black text-lg transition-all shadow-xl active:scale-95 ${broadcasting ? 'bg-error text-white hover:bg-error/90 shadow-error/20' : 'bg-primary text-white hover:bg-primary-container shadow-primary/20'}`}>
+               {broadcasting ? 'End Shift' : 'Go Online'}
            </button>
         </div>
 
@@ -123,7 +139,7 @@ export default function CaregiverDashboard() {
             <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <h3 style={{ fontSize: '20px', color: 'var(--primary-green)', margin: '0 0 20px', fontWeight: 'bold' }}>Your Emitted Location</h3>
                 <div className="map-container">
-                   <Map center={[51.505, -0.09]} role="caregiver" roomCode={`room_${myPin}`} />
+                   <Map center={[19.0760, 72.8777]} role="caregiver" roomCode={`room_${myPin}`} />
                 </div>
             </div>
         ) : (

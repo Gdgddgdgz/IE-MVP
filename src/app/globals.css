@@ -1,234 +1,75 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
 
-:root {
-  --primary-green: #0b4f42; /* Deep Teal/Pine Green */
-  --secondary-mint: #e8f5ef; /* Soft Mint Background */
-  --accent-green: #1a7b66; /* Lighter Teal */
-  --text-dark: #0f172a;
-  --text-light: #64748b;
-  --bg-white: #ffffff;
-  --bg-offwhite: #f8fafc;
-  --border-light: #e2e8f0;
+@theme {
+  --color-primary: #00665d;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #008176;
+  --color-on-primary-container: #e5fffa;
+  --color-secondary: #505f76;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #d0e1fb;
+  --color-on-secondary-container: #54647a;
+  --color-tertiary: #006746;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #00835a;
+  --color-on-tertiary-container: #e8ffef;
+  --color-surface: #f7f9fb;
+  --color-on-surface: #191c1e;
+  --color-surface-bright: #f7f9fb;
+  --color-surface-variant: #e0e3e5;
+  --color-on-surface-variant: #3e4949;
+  --color-surface-container-low: #f2f4f6;
+  --color-surface-container: #eceef0;
+  --color-surface-container-high: #e6e8ea;
+  --color-surface-container-highest: #e0e3e5;
+  --color-background: #f7f9fb;
+  --color-on-background: #191c1e;
+  --color-outline: #6e7979;
+  --color-outline-variant: #bdc9c8;
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  --color-accent-green: #15803d;
+  --color-border-light: #e2e8f0;
+  
+  --font-headline: "Manrope", sans-serif;
+  --font-body: "Inter", sans-serif;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: var(--bg-offwhite);
-  color: var(--text-dark);
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-/* Global Transitions */
-a, button, input, textarea, .card-flex, .grid-3 > div {
-  font-family: inherit;
-  transition: all 0.2s ease-in-out;
-}
-
-button:active {
-  transform: scale(0.98);
-}
-
-button:disabled {
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-input:focus, textarea:focus {
-  outline: none;
-  border-color: var(--primary-green) !important;
-  box-shadow: 0 0 0 3px rgba(11, 79, 66, 0.1);
-}
-
-.grid-3 > div:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.06) !important;
-}
-
-/* Responsive Utils */
-.dashboard-layout {
-  display: flex;
-  min-height: 100vh;
-  background-color: var(--bg-offwhite);
-  flex-direction: column;
-}
-
-@media (min-width: 768px) {
-  .dashboard-layout {
-    flex-direction: row;
+@layer base {
+  body { 
+    font-family: var(--font-body); 
+    background-color: var(--color-background); 
+    color: var(--color-on-background); 
+  }
+  h1, h2, h3 { 
+    font-family: var(--font-headline); 
   }
 }
 
-.sidebar {
-  width: 100%;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  color: white;
-  transition: all 0.3s ease;
-}
-
-@media (min-width: 768px) {
-  .sidebar {
-    width: 270px;
-    height: 100vh;
-    position: sticky;
-    top: 0;
-    box-shadow: 2px 0 15px rgba(0,0,0,0.05); /* Added subtle shadow */
+@layer components {
+  .material-symbols-outlined { 
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; 
+  }
+  .glass-nav { 
+    background: rgba(255, 255, 255, 0.7); 
+    backdrop-filter: blur(20px); 
+  }
+  .hero-gradient { 
+    background: radial-gradient(circle at top right, #e5fffa 0%, #f7f9fb 100%); 
+  }
+  
+  /* Standard Card Style */
+  .premium-card {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    transition: all 0.3s ease;
+  }
+  .premium-card:hover {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   }
 }
 
-.sidebar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-@media (min-width: 768px) {
-  .sidebar-header {
-    margin-bottom: 40px;
-  }
-}
-
-.hamburger-btn {
-  display: block;
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
-}
-
-@media (min-width: 768px) {
-  .hamburger-btn {
-    display: none;
-  }
-}
-
-.sidebar-nav {
-  display: none;
-  flex-direction: column;
-  gap: 8px; /* Tighter gap for better grouping */
-  flex: 1;
-}
-
-.sidebar-nav.open {
-  display: flex;
-}
-
-@media (min-width: 768px) {
-  .sidebar-nav {
-    display: flex;
-  }
-}
-
-.main-content {
-  flex: 1;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-@media (min-width: 768px) {
-  .main-content {
-    padding: 48px;
-    gap: 32px;
-  }
-}
-
-.grid-3 {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
-}
-
-@media (min-width: 768px) {
-  .grid-3 {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.header-flex {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  align-items: flex-start;
-}
-
-@media (min-width: 768px) {
-  .header-flex {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-  }
-}
-
-.map-container {
-  height: 280px;
-  width: 100%;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
-}
-
-@media (min-width: 768px) {
-  .map-container {
-    height: 100%;
-    min-height: 400px;
-  }
-}
-
-.card-flex {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  align-items: flex-start;
-  transition: all 0.2s ease-in-out;
-}
-@media (min-width: 768px) {
-  .card-flex {
-    flex-direction: row;
-    align-items: center;
-  }
-}
-
-/* Skeleton Loading Animation */
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
-.skeleton {
-  background: #e5e7eb;
-  background-image: linear-gradient(to right, #e5e7eb 0%, #f3f4f6 20%, #e5e7eb 40%, #e5e7eb 100%);
-  background-repeat: no-repeat;
-  background-size: 1000px 100%;
-  animation: shimmer 1.5s infinite linear;
-}
-
-.skeleton-dark {
-  background: rgba(255, 255, 255, 0.1);
-  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.2) 20%, rgba(255, 255, 255, 0.1) 40%, rgba(255, 255, 255, 0.1) 100%);
-}

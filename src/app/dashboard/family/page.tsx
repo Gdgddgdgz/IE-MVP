@@ -201,13 +201,9 @@ export default function FamilyDashboard() {
         <div className="main-content">
           {/* ── Header ── */}
           <header className="header-flex">
-            <div>
-              <h1 style={{ fontSize: '32px', color: 'var(--primary-green)', fontWeight: 'bold' }}>
-                Family Monitoring Center
-              </h1>
-              <p style={{ color: 'var(--text-light)' }}>
-                Track your loved ones and caregivers efficiently.
-              </p>
+            <div className="mb-8">
+              <h1 className="text-3xl font-black text-primary tracking-tight">Family Monitoring Center</h1>
+              <p className="text-secondary font-medium">Real-time health and safety oversight for your loved ones.</p>
             </div>
             <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
               <button
@@ -240,57 +236,50 @@ export default function FamilyDashboard() {
           )}
 
           {/* ── Pairing Box ── */}
-          <div className="card-flex" style={{ backgroundColor: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1 }}>
-              <Key size={24} color="var(--primary-green)" className="hidden-mobile" />
+          <div className="premium-card flex items-center justify-between gap-6 mb-8 border-l-4 border-primary">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-primary/10 rounded-xl text-primary">
+                <Key size={24} />
+              </div>
               <div>
-                <h3 style={{ fontSize: '18px', color: 'var(--primary-green)' }}>Link to Caregiver Session</h3>
-                <p style={{ color: 'var(--text-light)', fontSize: '14px' }}>
-                  Enter the 4-digit PIN provided by your caregiver to track their session.
-                </p>
+                <h3 className="text-lg font-bold text-slate-900">Caregiver Session Link</h3>
+                <p className="text-sm text-slate-500">Enter the 4-digit PIN from your caregiver to start tracking.</p>
               </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start' }}>
-              <form onSubmit={connectToPin} style={{ display: 'flex', gap: '10px' }}>
+            <div className="flex flex-col gap-2">
+              <form onSubmit={connectToPin} className="flex gap-3">
                 <input
                   type="text"
                   value={roomPin}
                   onChange={e => setRoomPin(e.target.value)}
                   maxLength={4}
-                  placeholder="Enter PIN"
-                  style={{ padding: '10px', width: '130px', fontSize: '18px', letterSpacing: '2px', textAlign: 'center', borderRadius: '8px', border: '1px solid var(--border-light)' }}
+                  placeholder="PIN"
+                  className="w-24 px-4 py-2 text-center text-xl font-bold tracking-widest border-2 border-slate-200 rounded-xl focus:border-primary focus:outline-none transition-colors"
                 />
-                <button type="submit" disabled={roomPin.length < 4} style={{ padding: '10px 20px', backgroundColor: roomPin.length < 4 ? 'var(--border-light)' : 'var(--primary-green)', color: roomPin.length < 4 ? 'var(--text-light)' : 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: roomPin.length < 4 ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}>
+                <button type="submit" disabled={roomPin.length < 4} className="px-6 py-2 bg-primary text-white font-bold rounded-xl disabled:bg-slate-300 disabled:cursor-not-allowed hover:bg-primary-container transition-all">
                   Connect
                 </button>
               </form>
-              {activePin && <div style={{ color: 'var(--accent-green)', fontWeight: 'bold' }}>✓ Tracking PIN: {activePin}</div>}
+              {activePin && <div className="text-xs font-bold text-accent-green flex items-center gap-1">🟢 Connected to Room {activePin}</div>}
             </div>
           </div>
 
           {/* ── Stats Row ── */}
-          <div className="grid-3">
-            {/* Heart Rate Card */}
-            <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', borderTop: '4px solid #ef4444' }}>
-              <div style={{ animation: 'bpmFade 0.4s ease-out' }} key={heartRate}>
-                <HeartRateWidget bpm={heartRate} />
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="premium-card border-t-4 border-error">
+              <HeartRateWidget bpm={heartRate} />
             </div>
 
-            {/* Active Caregiver Card */}
-            <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', borderTop: '4px solid var(--accent-green)' }}>
-              <div style={{ color: 'var(--text-light)', fontSize: '13px', marginBottom: '8px' }}>Active Caregiver Provider</div>
-              <div style={{ fontSize: '22px', fontWeight: 'bold', color: 'var(--accent-green)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                {activePin ? 'Assigned Pro' : 'Awaiting Check-in'}
-                {activePin && caregiverVerified && <span title="DGCare Strictly Verified Provider">🛡️ ✅</span>}
+            <div className="premium-card border-t-4 border-accent-green">
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Active Care Provider</div>
+              <div className="text-2xl font-black text-slate-900 flex items-center gap-2">
+                {activePin ? 'Assigned Expert' : 'Awaiting Check-in'}
+                {activePin && caregiverVerified && <span className="text-lg" title="DGCare strictly verified">🛡️</span>}
               </div>
-              {activePin && (
-                <div style={{ fontSize: '12px', color: 'var(--text-light)', marginTop: '6px' }}>PIN: {activePin} · Live tracking active</div>
-              )}
+              {activePin && <div className="text-xs font-medium text-slate-500 mt-2">PIN: {activePin} • Encrypted live signal</div>}
             </div>
 
-            {/* Medication Card */}
-            <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', borderTop: `4px solid ${nextMed.minutesLeft <= 30 ? '#f59e0b' : '#6b7280'}` }}>
+            <div className="premium-card border-t-4 border-secondary">
               <NextMedWidget nextTime={nextMed.label} minutesLeft={nextMed.minutesLeft} />
             </div>
           </div>
@@ -302,7 +291,7 @@ export default function FamilyDashboard() {
                 <MapPin size={24} /> Caregiver Location Tracker
               </h3>
               <div className="map-container">
-                <Map center={[51.505, -0.09]} role="family" roomCode={`room_${activePin}`} />
+                <Map center={[19.0760, 72.8777]} role="family" roomCode={`room_${activePin}`} />
               </div>
             </div>
           ) : (

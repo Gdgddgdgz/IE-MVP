@@ -26,7 +26,7 @@ function LocationMarker({ position }: { position: any }) {
   );
 }
 
-export default function Map({ center = [51.505, -0.09], role = 'family', roomCode = 'room_123' }: { center?: any, role?: string, roomCode?: string }) {
+export default function Map({ center = [19.0760, 72.8777], role = 'family', roomCode = 'room_123' }: { center?: any, role?: string, roomCode?: string }) {
   const [caregiverLocation, setCaregiverLocation] = useState(center);
   const socketRef = useRef<any>(null);
 
