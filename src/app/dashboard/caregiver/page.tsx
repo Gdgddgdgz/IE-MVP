@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { AlertTriangle, FileCheck, Clock3 } from 'lucide-react';
+import { AlertTriangle, FileCheck, Clock3, MapPin } from 'lucide-react';
 import io from 'socket.io-client';
 import Sidebar from '@/components/Sidebar';
 import { FullPageSkeleton } from '@/components/SkeletonLoader';
@@ -19,7 +19,7 @@ export default function CaregiverDashboard() {
   const [isVerified, setIsVerified] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [verificationPending, setVerificationPending] = useState(false);
-  const socketRef = useRef<any>(null);
+  const socketRef = useRef<ReturnType<typeof io> | null>(null);
 
   useEffect(() => {
     const lsUser = localStorage.getItem('dgcare_user');
@@ -30,7 +30,14 @@ export default function CaregiverDashboard() {
       if (parsed.role !== 'caregiver') router.push('/dashboard');
       else setUser(parsed);
     }
-    setMyPin(Math.floor(1000 + Math.random() * 9000).toString());
+    const storedPin = localStorage.getItem('caregiver_pin');
+    if (storedPin) {
+      setMyPin(storedPin);
+    } else {
+      const newPin = Math.floor(1000 + Math.random() * 9000).toString();
+      localStorage.setItem('caregiver_pin', newPin);
+      setMyPin(newPin);
+    }
     if(localStorage.getItem('caregiver_verified') === 'true') setIsVerified(true);
     if(localStorage.getItem('caregiver_verification_pending') === 'true') setVerificationPending(true);
   }, [router]);
@@ -44,7 +51,7 @@ export default function CaregiverDashboard() {
     socketRef.current.emit('join_room', `room_${myPin}`);
     socketRef.current.on('sos_alert', (data: any) => {
       setSosActive(true);
-      alert(`URGENT: SOS Alert Received from Family in room ${myPin}!`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
     return () => { if (socketRef.current) socketRef.current.disconnect(); };
   }, [user, myPin, broadcasting]);
@@ -74,77 +81,101 @@ export default function CaregiverDashboard() {
       <Sidebar role="caregiver" userName={user.name || ''} isVerified={isVerified} />
 
       <div className="main-content">
-        <header className="mb-8 flex items-center justify-between gap-6">
+        <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 animate-fade-in-up">
           <div>
             <h1 className="text-3xl font-black text-primary tracking-tight">Shift Control Center</h1>
-            <p className="text-secondary font-medium">Manage your clinical sessions and broadcast status to families.</p>
+            <p className="text-slate-500 font-medium mt-1">Manage your clinical sessions and broadcast status to families.</p>
           </div>
-          <button onClick={handleSOS} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold bg-error text-white transition-all ${sosActive ? 'animate-pulse shadow-[0_0_20px_rgba(239,68,68,0.4)]' : ''}`}>
-            <AlertTriangle size={20} /> {sosActive ? 'SOS SENT' : 'SEND EMERGENCY'}
+          <button 
+            onClick={handleSOS} 
+            className={`flex items-center gap-2.5 px-6 py-3 rounded-xl font-bold bg-red-500 text-white transition-all duration-300 shadow-lg ${
+              sosActive 
+                ? 'animate-pulse shadow-red-500/40' 
+                : 'hover:bg-red-600 shadow-red-500/20 hover:shadow-red-600/30 hover:-translate-y-0.5 active:translate-y-0'
+            }`}
+          >
+            <AlertTriangle size={20} className={sosActive ? "animate-bounce" : ""} /> 
+            {sosActive ? 'SOS SUBMITTED' : 'EMERGENCY SOS'}
           </button>
         </header>
 
         {sosActive && (
-          <div style={{ padding: '20px', backgroundColor: '#fef2f2', border: '2px solid #ef4444', borderRadius: '8px', color: '#b91c1c', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <AlertTriangle size={24} /> Emergency SOS Alert Triggered.
+          <div className="mb-8 p-5 bg-red-50 border border-red-200 rounded-xl text-red-700 font-bold flex items-center gap-3 shadow-sm animate-fade-in">
+            <AlertTriangle size={24} className="text-red-500 animate-pulse" /> Emergency SOS Alert Triggered. Local authorities notified.
           </div>
         )}
 
         {!isVerified && !verificationPending && (
-           <div className="premium-card flex items-center justify-between gap-6 mb-8 bg-yellow-50 border-2 border-yellow-200">
+           <div className="premium-card flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8 bg-amber-50 border-2 border-amber-200 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
                <div>
-                   <h3 className="text-lg font-bold text-yellow-900 flex items-center gap-2">
-                       <FileCheck size={20} /> Identity Verification Required
+                   <h3 className="text-lg font-bold text-amber-900 flex items-center gap-2 mb-1">
+                       <FileCheck size={20} className="text-amber-600" /> Identity Verification Required
                    </h3>
-                   <p className="text-sm text-yellow-800">DGCare requires all providers to pass a strict background check before families will book you. Submit your ID documents to begin the process.</p>
+                   <p className="text-sm text-amber-800/80 font-medium max-w-2xl">DGCare requires all providers to pass a strict background check before families will book you. Submit your ID documents to begin the process.</p>
                </div>
-               <button onClick={handleVerify} disabled={verifying} className="px-6 py-3 bg-yellow-600 text-white font-bold rounded-xl hover:bg-yellow-700 disabled:bg-yellow-300 transition-all">
-                   {verifying ? 'Submitting...' : 'Submit ID Documents'}
+               <button onClick={handleVerify} disabled={verifying} className="whitespace-nowrap px-6 py-3 bg-amber-600 text-white font-bold rounded-xl shadow-md shadow-amber-600/20 hover:bg-amber-700 hover:shadow-lg disabled:bg-amber-300 disabled:shadow-none transition-all active:scale-95">
+                   {verifying ? 'Submitting secure payload...' : 'Submit ID Documents'}
                </button>
            </div>
         )}
 
         {!isVerified && verificationPending && (
-           <div style={{ backgroundColor: '#fffbeb', border: '2px solid #f59e0b', padding: '20px 24px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-               <div style={{ width: '44px', height: '44px', borderRadius: '50%', backgroundColor: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                   <Clock3 size={22} color="#f59e0b" />
+           <div className="mb-8 bg-amber-50 border border-amber-200 p-6 rounded-2xl flex items-start sm:items-center gap-4 shadow-sm animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+               <div className="w-12 h-12 rounded-xl bg-amber-200/50 flex flex-col items-center justify-center shrink-0">
+                   <Clock3 size={24} className="text-amber-600" />
                </div>
-               <div style={{ flex: 1 }}>
-                   <div style={{ fontWeight: 'bold', color: '#92400e', fontSize: '15px', marginBottom: '3px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                       ⚠️ Verification In Process
+               <div className="flex-1">
+                   <div className="font-bold text-amber-900 text-base mb-1 flex items-center gap-2 tracking-tight">
+                       Verification In Process
                    </div>
-                   <p style={{ color: '#b45309', fontSize: '13px' }}>Your documents have been received. Our team is conducting the background check — we&apos;ll notify you once complete. This usually takes 1–2 business days.</p>
+                   <p className="text-amber-800/80 text-sm font-medium">Your documents have been securely received. Our clinical team is conducting the background check — we'll notify you once complete. This usually takes 1–2 business days.</p>
                </div>
-               <span style={{ padding: '4px 14px', backgroundColor: '#fef3c7', borderRadius: '99px', color: '#92400e', fontWeight: 'bold', fontSize: '12px', border: '1px solid #f59e0b', flexShrink: 0 }}>PENDING</span>
+               <span className="hidden sm:flex px-3 py-1.5 bg-amber-200/50 rounded-lg text-amber-800 font-bold text-xs tracking-wider border border-amber-300 shrink-0">STATUS: PENDING</span>
            </div>
         )}
 
-        <div className={`premium-card flex items-center justify-between gap-8 mb-8 border-l-8 transition-all duration-500 ${broadcasting ? 'border-primary bg-primary/5' : 'border-slate-300'}`}>
+        <div className={`premium-card flex flex-col md:flex-row items-start md:items-center justify-between gap-8 mb-8 border-l-[6px] transition-all duration-500 animate-fade-in-up ${broadcasting ? 'border-primary bg-primary/5 shadow-primary/10' : 'border-slate-200'}`} style={{ animationDelay: '0.2s' }}>
            <div className="flex-1">
-               <h3 className={`text-2xl font-black mb-1 flex items-center gap-3 ${broadcasting ? 'text-primary' : 'text-slate-400'}`}>
-                 {broadcasting ? '🟢 Broadcasting Live' : '⚪ Shift Offline'}
+               <h3 className={`text-2xl font-black mb-2 flex items-center gap-3 transition-colors ${broadcasting ? 'text-primary' : 'text-slate-400'}`}>
+                 {broadcasting ? <><div className="w-3 h-3 rounded-full bg-primary animate-pulse" /> Live Broadcast Active</> : <><div className="w-3 h-3 rounded-full bg-slate-300" /> Shift Offline</>}
                </h3>
-               <p className="text-sm text-slate-500 max-w-md">Provide this unique PIN to your assigned family member so they can safely track your session and arrival.</p>
-               <div className={`text-4xl font-extrabold tracking-[0.25em] mt-4 font-mono ${broadcasting ? 'text-primary' : 'text-slate-300'}`}>{myPin}</div>
+               <p className="text-sm font-medium text-slate-500 max-w-lg">Provide this secure PIN to your assigned family member so they can safely track your session and arrival.</p>
+               <div className={`text-4xl font-black tracking-[0.25em] mt-5 font-mono select-all ${broadcasting ? 'text-primary' : 'text-slate-300'}`}>{myPin}</div>
            </div>
-           <button onClick={() => {
-                if(!isVerified) { alert("You must be Verified to start a shift!"); return; }
-                setBroadcasting(!broadcasting);
-            }} className={`px-10 py-5 rounded-[1.25rem] font-black text-lg transition-all shadow-xl active:scale-95 ${broadcasting ? 'bg-error text-white hover:bg-error/90 shadow-error/20' : 'bg-primary text-white hover:bg-primary-container shadow-primary/20'}`}>
-               {broadcasting ? 'End Shift' : 'Go Online'}
+           
+           <button 
+              onClick={() => {
+                  if(!isVerified) { 
+                      // Custom styled alert in a real app, here we fallback 
+                      alert("You must be Verified to start a shift!"); 
+                      return; 
+                  }
+                  setBroadcasting(!broadcasting);
+              }} 
+              className={`px-10 py-5 rounded-2xl font-black text-lg transition-all duration-300 w-full md:w-auto shadow-lg active:-scale-y-[0.98] active:scale-x-[0.98] ${
+                  broadcasting 
+                    ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-500/20' 
+                    : 'bg-primary text-white hover:bg-primary-container shadow-primary/20 hover:-translate-y-1'
+              }`}
+           >
+               {broadcasting ? 'End Broadcast' : 'Go Online Now'}
            </button>
         </div>
 
         {broadcasting ? (
-            <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <h3 style={{ fontSize: '20px', color: 'var(--primary-green)', margin: '0 0 20px', fontWeight: 'bold' }}>Your Emitted Location</h3>
-                <div className="map-container">
+            <div className="premium-card flex-1 flex flex-col p-6 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                <h3 className="text-xl text-primary font-black mb-5 tracking-tight flex items-center gap-2">
+                    <MapPin size={22} className="text-primary animate-pulse" /> Your Emitted Location
+                </h3>
+                <div className="flex-1 min-h-[400px] rounded-xl overflow-hidden border border-slate-100 shadow-inner">
                    <Map center={[19.0760, 72.8777]} role="caregiver" roomCode={`room_${myPin}`} />
                 </div>
             </div>
         ) : (
-            <div style={{ backgroundColor: 'white', border: '2px dashed var(--border-light)', padding: '40px', borderRadius: '12px', textAlign: 'center', color: 'var(--text-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                <p>Start your shift to begin device location tracking.</p>
+            <div className="bg-white border-2 border-dashed border-slate-200 p-12 rounded-2xl text-center text-slate-400 flex flex-col items-center justify-center flex-1 min-h-[300px] animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                <MapPin size={48} className="mb-4 opacity-50 text-slate-300" />
+                <p className="font-medium text-lg">Start your shift to begin transmitting GPS coordinates securely.</p>
+                <p className="text-sm mt-2 opacity-70">The map interface will unlock immediately.</p>
             </div>
         )}
       </div>

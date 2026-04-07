@@ -21,6 +21,6 @@ export default function DashboardRouter() {
     }
   }, [router]);
 
-  if (!mounted) return <div style={{ padding: '40px', color: 'var(--primary-green)' }}>Initializing...</div>;
-  return <div style={{ padding: '40px', color: 'var(--primary-green)' }}>Redirecting...</div>;
+  if (!mounted) return <div className="min-h-screen flex items-center justify-center text-primary font-bold text-xl animate-pulse">Initializing...</div>;
+  return <div className="min-h-screen flex items-center justify-center text-primary font-bold text-xl animate-pulse">Redirecting...</div>;
 }

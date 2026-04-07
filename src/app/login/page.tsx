@@ -8,11 +8,21 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('family');
+  const [error, setError] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    localStorage.setItem('dgcare_user', JSON.stringify({ email, role }));
-    router.push('/dashboard');
+    setError('');
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+    try {
+      localStorage.setItem('dgcare_user', JSON.stringify({ email, role }));
+      router.push(role === 'family' ? '/dashboard/family' : '/dashboard/caregiver');
+    } catch {
+      setError('Unable to save session. Please allow local storage and try again.');
+    }
   };
 
   return (
@@ -77,6 +87,11 @@ export default function Login() {
                   <option value="caregiver">Professional Provider</option>
                 </select>
               </div>
+              {error && (
+                <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-medium">
+                  {error}
+                </div>
+              )}
               <button 
                 type="submit" 
                 className="w-full py-4 mt-4 bg-primary text-white font-bold rounded-xl hover:bg-primary-container shadow-lg shadow-primary/20 active:scale-[0.98] transition-all"
