@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle, Star, ShieldCheck, Clock, CalendarDays, StickyNote, Trash2, Users } from 'lucide-react';
+import { CheckCircle, Star, ShieldCheck, Clock, CalendarDays, StickyNote, Trash2, Users, Loader2 } from 'lucide-react';
+import { useToast } from '@/components/ToastProvider';
 import Sidebar from '@/components/Sidebar';
 import { FullPageSkeleton } from '@/components/SkeletonLoader';
 
@@ -84,6 +85,8 @@ export default function FamilyBooking() {
   const [submitted, setSubmitted] = useState(false);
   const [user, setUser] = useState<{ email: string; role: string; name?: string } | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     const lsUser = localStorage.getItem('dgcare_user');
@@ -97,8 +100,13 @@ export default function FamilyBooking() {
     setBookings(stored);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    
+    // Simulate real network request
+    await new Promise(resolve => setTimeout(resolve, 1200));
+
     const newBooking: Booking = {
       id: Date.now(),
       date,
@@ -111,6 +119,10 @@ export default function FamilyBooking() {
     const updated = [...current, newBooking];
     localStorage.setItem('dgcare_bookings', JSON.stringify(updated));
     setBookings(updated);
+    
+    setIsSubmitting(false);
+    toast.success('Your care session has been successfully booked!');
+    
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);
@@ -125,6 +137,7 @@ export default function FamilyBooking() {
     const updated: Booking[] = bookings.map((b) => b.id === id ? { ...b, status: 'cancelled' as const } : b);
     localStorage.setItem('dgcare_bookings', JSON.stringify(updated));
     setBookings(updated);
+    toast.error('Booking session cancelled.');
   };
 
   const handleRequestCaregiver = (cg: Caregiver) => {
@@ -270,8 +283,8 @@ export default function FamilyBooking() {
                     className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none resize-y min-h-[100px]" 
                   />
                 </div>
-                <button type="submit" className="w-full py-4 mt-2 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:bg-primary-container hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all text-lg tracking-wide outline-none focus:ring-4 focus:ring-primary/30">
-                  Submit Booking Request
+                <button type="submit" disabled={isSubmitting} className="w-full btn-medical btn-medical-primary flex items-center justify-center gap-2 mt-2">
+                  {isSubmitting ? <><Loader2 size={20} className="animate-spin" /> Processing Secure Payload...</> : 'Submit Booking Request'}
                 </button>
               </form>
             )}

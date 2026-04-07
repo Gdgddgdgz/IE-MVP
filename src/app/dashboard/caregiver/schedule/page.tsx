@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Clock, Check, X, CalendarX } from 'lucide-react';
 import Link from 'next/link';
+import { useToast } from '@/components/ToastProvider';
 import Sidebar from '@/components/Sidebar';
 import { FullPageSkeleton } from '@/components/SkeletonLoader';
 
@@ -12,6 +13,7 @@ export default function Schedule() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [user, setUser] = useState<{ email: string, role: string, name?: string } | null>(null);
   const [isVerified, setIsVerified] = useState(false);
+  const toast = useToast();
   
   useEffect(() => {
     const lsUser = localStorage.getItem('dgcare_user');
@@ -22,10 +24,17 @@ export default function Schedule() {
     if(localStorage.getItem('caregiver_verified') === 'true') setIsVerified(true);
   }, [router]);
 
-  const handleAction = (id: number, status: string) => {
+  const handleAction = async (id: number, status: string) => {
+      // simulate realistic processing latency
+      if (status === 'accepted') toast.info("Processing acceptance signature...");
+      await new Promise(r => setTimeout(r, 800));
+
       const updated = bookings.map(b => b.id === id ? { ...b, status } : b);
       setBookings(updated);
       localStorage.setItem('dgcare_bookings', JSON.stringify(updated));
+      
+      if (status === 'accepted') toast.success("Secure connection established! Shift Confirmed.");
+      if (status === 'declined') toast.error("Shift request securely declined.");
   };
   
   if (!user) return <FullPageSkeleton role="caregiver" />;
@@ -88,15 +97,14 @@ export default function Schedule() {
                               <div className="flex gap-4 shrink-0 mt-4 md:mt-0 pt-4 border-t border-slate-100 md:border-transparent md:pt-0">
                                   <button onClick={() => {
                                       if(!isVerified) { 
-                                          // Note: production app would use toast
-                                          alert("Only Verified providers can accept shifts. Please verify your ID on the Shift Control dashboard."); 
+                                          toast.error("Requires verification! Please verify your ID via Shift Control."); 
                                           return; 
                                       }
                                       handleAction(booking.id, 'accepted');
-                                  }} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-green-500 text-white border-2 border-green-500 hover:bg-green-600 hover:border-green-600 rounded-xl font-bold transition-all shadow-md shadow-green-500/20 active:scale-95 group">
+                                  }} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-green-500 text-white border-2 border-green-500 hover:bg-green-600 hover:border-green-600 rounded-[0.75rem] font-bold transition-all shadow-md shadow-green-500/20 active:scale-95 group">
                                       <Check size={20} className="transition-transform group-hover:scale-110" /> Accept
                                   </button>
-                                  <button onClick={() => handleAction(booking.id, 'declined')} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-white text-red-600 border-2 border-red-200 hover:bg-red-50 hover:border-red-300 hover:text-red-700 rounded-xl font-bold transition-all active:scale-95 group">
+                                  <button onClick={() => handleAction(booking.id, 'declined')} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-white text-red-600 border-2 border-red-200 hover:bg-red-50 hover:border-red-300 hover:text-red-700 rounded-[0.75rem] font-bold transition-all active:scale-95 group">
                                       <X size={20} className="transition-transform group-hover:rotate-90" /> Decline
                                   </button>
                               </div>

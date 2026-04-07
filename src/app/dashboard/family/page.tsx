@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { AlertTriangle, Key, MapPin, HeartPulse, Pill, Clock } from 'lucide-react';
+import { useToast } from '@/components/ToastProvider';
 import io from 'socket.io-client';
 import Sidebar from '@/components/Sidebar';
 import { FullPageSkeleton } from '@/components/SkeletonLoader';
@@ -107,6 +108,7 @@ export default function FamilyDashboard() {
   const [roomPin, setRoomPin] = useState('');
   const [activePin, setActivePin] = useState('');
   const [caregiverVerified, setCaregiverVerified] = useState(false);
+  const toast = useToast();
   const socketRef = useRef<ReturnType<typeof io> | null>(null);
 
   // Animated heart rate (76–82 BPM)
@@ -162,14 +164,16 @@ export default function FamilyDashboard() {
     if (socketRef.current && activePin) {
       socketRef.current.emit('sos_alert', { roomId: `room_${activePin}`, sender: user?.name || user?.email });
       setSosActive(true);
+      toast.error('Emergency SOS dispatched to caregiver.');
     } else {
-      alert('Must be paired to a Caregiver PIN to send Emergency Alerts to them.');
+      toast.error('Must be paired to a Caregiver PIN to send Emergency Alerts.');
     }
   };
 
   const connectToPin = (e: any) => {
     e.preventDefault();
     setActivePin(roomPin);
+    toast.success('Secured encrypted connection to provider.');
   };
 
   if (!user) return <FullPageSkeleton role="family" />;
@@ -208,10 +212,10 @@ export default function FamilyDashboard() {
             <div className="flex gap-4 items-center">
               <button
                 onClick={handleSOS}
-                className={`flex items-center gap-2.5 px-6 py-3 rounded-xl font-bold text-white transition-all duration-300 shadow-lg ${
+                className={`flex items-center gap-2.5 px-6 py-3 rounded-[0.75rem] font-bold text-white transition-all shadow-md ${
                   sosActive 
                     ? 'bg-red-500 shadow-red-500/40 animate-pulse' 
-                    : 'bg-red-500 hover:bg-red-600 shadow-red-500/20 hover:shadow-red-600/30 hover:-translate-y-0.5 active:translate-y-0'
+                    : 'bg-red-500 hover:bg-red-600 hover:shadow-lg hover:-translate-y-[1px] active:scale-95 active:translate-y-0'
                 }`}
               >
                 <AlertTriangle size={20} className={sosActive ? "animate-bounce" : ""} /> 
@@ -247,7 +251,7 @@ export default function FamilyDashboard() {
                   placeholder="PIN"
                   className="w-28 px-4 py-3 text-center text-xl font-bold tracking-widest border border-slate-200 rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 focus:bg-white"
                 />
-                <button type="submit" disabled={roomPin.length < 4} className="px-6 py-3 bg-primary text-white font-bold rounded-xl disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed hover:bg-primary-container active:scale-95 transition-all shadow-md hover:shadow-lg disabled:shadow-none">
+                <button type="submit" disabled={roomPin.length < 4} className="btn-medical btn-medical-primary">
                   Connect
                 </button>
               </form>

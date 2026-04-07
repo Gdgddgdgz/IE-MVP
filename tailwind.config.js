@@ -9,13 +9,13 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        "primary": "#00665d",
+        "primary": "#005a54",
         "on-secondary-container": "#54647a",
-        "on-primary-container": "#e5fffa",
+        "on-primary-container": "#ccf0eb",
         "primary-fixed-dim": "#6bd8cb",
         "secondary-fixed": "#d3e4fe",
         "surface-bright": "#f7f9fb",
-        "surface-tint": "#006a61",
+        "surface-tint": "#005a54",
         "secondary": "#505f76",
         "surface": "#f7f9fb",
         "on-background": "#191c1e",
@@ -40,7 +40,7 @@ module.exports = {
         "tertiary-fixed-dim": "#4edea3",
         "tertiary": "#006746",
         "surface-container-low": "#f2f4f6",
-        "primary-container": "#008176",
+        "primary-container": "#e6fffa",
         "on-surface-variant": "#3e4949",
         "error-container": "#ffdad6",
         "surface-variant": "#e0e3e5",
@@ -49,18 +49,22 @@ module.exports = {
         "surface-container-highest": "#e0e3e5",
         "surface-container-lowest": "#ffffff",
         "outline": "#6e7979",
-        "error": "#ba1a1a",
+        "error": "#d93025",
         "on-primary": "#ffffff",
         "surface-container": "#eceef0",
         "on-error-container": "#93000a",
-        "background": "#f7f9fb"
+        "background": "#fbfcfd"
       },
       fontFamily: {
         "headline": ["Manrope", "sans-serif"],
         "body": ["Inter", "sans-serif"],
         "label": ["Inter", "sans-serif"]
       },
-      borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "1.5rem", "full": "9999px" },
+      boxShadow: {
+        'medical-sheet': '0 2px 8px -2px rgba(0, 90, 84, 0.08), 0 8px 24px -4px rgba(0, 0, 0, 0.05)',
+        'medical-float': '0 12px 32px -4px rgba(0, 90, 84, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.04)',
+      },
+      borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "1rem", "2xl": "1.25rem", "full": "9999px" },
       keyframes: {
         'fade-in': {
           '0%': { opacity: '0' },

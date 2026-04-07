@@ -60,18 +60,56 @@
     background: radial-gradient(circle at top right, #e5fffa 0%, #f7f9fb 100%); 
   }
   
-  /* Standard Card Style */
+  /* Clinical Card Style */
   .premium-card {
     background-color: white;
     padding: 1.5rem;
-    border-radius: 1rem;
-    border: 1px solid var(--color-surface-container);
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 1.25rem;
+    border: 1px solid var(--color-surface-container-high);
+    box-shadow: 0 2px 8px -2px rgba(0, 90, 84, 0.05), 0 4px 16px -4px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
   }
   .premium-card:hover {
-    box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 12px 32px -4px rgba(0, 90, 84, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
     transform: translateY(-2px);
+  }
+
+  /* Medical Interactive Elements */
+  .btn-medical {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+    border-radius: 0.75rem;
+    transition: all 0.25s ease;
+    overflow: hidden;
+  }
+  
+  .btn-medical:active {
+    transform: scale(0.97);
+  }
+
+  .btn-medical-primary {
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 90, 84, 0.15);
+  }
+  
+  .btn-medical-primary:hover:not(:disabled) {
+    background-color: #004b46;
+    box-shadow: 0 6px 16px rgba(0, 90, 84, 0.25);
+    transform: translateY(-1px);
+  }
+
+  .btn-medical-primary:disabled {
+    background-color: #94a3b8;
+    box-shadow: none;
+    cursor: not-allowed;
   }
   
   .dashboard-layout {
@@ -103,12 +141,12 @@
 
 /* Backward Compatibility Aliases */
 :root {
-  --primary-green: #00665d;
-  --secondary-mint: #e5fffa;
+  --primary-green: #005a54;
+  --secondary-mint: #ccf0eb;
   --bg-white: #ffffff;
-  --text-dark: #191c1e;
-  --text-light: #505f76;
-  --border-light: #e2e8f0;
-  --accent-green: #15803d;
+  --text-dark: #0b1c30;
+  --text-light: #54647a;
+  --border-light: #e6e8ea;
+  --accent-green: #00835a;
 }
 

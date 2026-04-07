@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { AlertTriangle, FileCheck, Clock3, MapPin } from 'lucide-react';
+import { useToast } from '@/components/ToastProvider';
 import io from 'socket.io-client';
 import Sidebar from '@/components/Sidebar';
 import { FullPageSkeleton } from '@/components/SkeletonLoader';
@@ -19,6 +20,7 @@ export default function CaregiverDashboard() {
   const [isVerified, setIsVerified] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [verificationPending, setVerificationPending] = useState(false);
+  const toast = useToast();
   const socketRef = useRef<ReturnType<typeof io> | null>(null);
 
   useEffect(() => {
@@ -60,8 +62,9 @@ export default function CaregiverDashboard() {
     if (socketRef.current && broadcasting) {
       socketRef.current.emit('sos_alert', { roomId: `room_${myPin}`, sender: user?.name || user?.email });
       setSosActive(true);
+      toast.error("Emergency SOS Broadcasted!");
     } else {
-        alert("Must be broadcasting your shift to send an SOS to the paired family member.");
+        toast.error("Must be actively broadcasting your shift to send an SOS.");
     }
   };
 
@@ -71,6 +74,7 @@ export default function CaregiverDashboard() {
          setVerificationPending(true);
          localStorage.setItem('caregiver_verification_pending', 'true');
          setVerifying(false);
+         toast.success("Secure payload transmitted. Verification initiated.");
      }, 1500);
   };
 
@@ -143,13 +147,14 @@ export default function CaregiverDashboard() {
                <div className={`text-4xl font-black tracking-[0.25em] mt-5 font-mono select-all ${broadcasting ? 'text-primary' : 'text-slate-300'}`}>{myPin}</div>
            </div>
            
-           <button 
+            <button 
               onClick={() => {
                   if(!isVerified) { 
-                      // Custom styled alert in a real app, here we fallback 
-                      alert("You must be Verified to start a shift!"); 
+                      toast.error("You must pass Identity Verification to start a clinical shift!"); 
                       return; 
                   }
+                  if (!broadcasting) toast.success(`Encrypted broadcast started on PIN ${myPin}`);
+                  else toast.info("Shift offline. Tracking disabled.");
                   setBroadcasting(!broadcasting);
               }} 
               className={`px-10 py-5 rounded-2xl font-black text-lg transition-all duration-300 w-full md:w-auto shadow-lg active:-scale-y-[0.98] active:scale-x-[0.98] ${
