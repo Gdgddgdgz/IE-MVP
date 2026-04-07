@@ -6,7 +6,7 @@ export default function LandingPage() {
       {/* Top Navigation Bar */}
       <header className="fixed top-0 w-full flex justify-between items-center px-8 h-20 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl z-50 shadow-sm shadow-teal-900/5">
         <div className="flex items-center gap-8">
-          <span className="text-2xl font-black text-teal-800 dark:text-teal-200 tracking-tighter">DGCare</span>
+          <img src="/logo.jpg" alt="DGCare" className="h-10 w-auto" />
           <nav className="hidden md:flex items-center gap-6">
             <a className="text-teal-700 dark:text-teal-300 border-b-2 border-teal-600 pb-1 font-semibold text-sm tracking-tight" href="#">Find Caregiver</a>
             <a className="text-slate-500 dark:text-slate-400 hover:text-teal-600 transition-colors font-semibold text-sm tracking-tight" href="#">Become Caregiver</a>
@@ -257,7 +257,7 @@ export default function LandingPage() {
       <footer className="bg-slate-100 dark:bg-slate-900 py-12 px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 max-w-7xl mx-auto">
           <div className="flex flex-col gap-4">
-            <span className="font-bold text-slate-900 dark:text-white text-2xl">DGCare</span>
+            <img src="/logo.jpg" alt="DGCare" className="h-12 w-auto grayscale opacity-80" />
             <p className="text-slate-500 text-xs uppercase tracking-widest leading-relaxed">Editorial Healthcare Excellence. Providing elite clinical matches since 2024.</p>
           </div>
           <div>

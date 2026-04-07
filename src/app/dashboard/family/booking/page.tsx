@@ -1,10 +1,10 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle, Star, ShieldCheck, Clock, CalendarDays, StickyNote, Trash2, Users, Loader2 } from 'lucide-react';
-import { useToast } from '@/components/ToastProvider';
-import Sidebar from '@/components/Sidebar';
+import { LogOut } from 'lucide-react';
 import { FullPageSkeleton } from '@/components/SkeletonLoader';
+import Link from 'next/link';
 
 interface Booking {
   id: number;
@@ -15,83 +15,31 @@ interface Booking {
   caregiver?: string;
 }
 
-interface Caregiver {
-  id: number;
-  name: string;
-  specialty: string;
-  rating: number;
-  available: boolean;
-  initials: string;
-  color: string;
-}
-
-const MOCK_CAREGIVERS: Caregiver[] = [
-  {
-    id: 1,
-    name: 'Priya Sharma',
-    specialty: 'Elder Care & Dementia Support',
-    rating: 4.9,
-    available: true,
-    initials: 'PS',
-    color: '#0b4f42',
-  },
-  {
-    id: 2,
-    name: 'James Okafor',
-    specialty: 'Post-Surgery & Mobility Assist',
-    rating: 4.7,
-    available: true,
-    initials: 'JO',
-    color: '#1a7b66',
-  },
-  {
-    id: 3,
-    name: 'Maria Santos',
-    specialty: 'Pediatric & Chronic Illness Care',
-    rating: 5.0,
-    available: false,
-    initials: 'MS',
-    color: '#6b7280',
-  },
+const MOCK_CAREGIVERS = [
+  { id: 1, name: 'Priya Sharma (GNM Specialist)' },
+  { id: 2, name: 'James Okafor (Physiotherapy Aide)' },
+  { id: 3, name: 'Dr. Sneha Desai (Clinical Curator)' },
 ];
 
-const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }> = {
-  pending:   { bg: '#fff7ed', color: '#c2410c', label: 'Pending' },
-  confirmed: { bg: '#f0fdf4', color: '#15803d', label: 'Confirmed' },
-  cancelled: { bg: '#fef2f2', color: '#b91c1c', label: 'Cancelled' },
-};
-
-function StarRating({ rating }: { rating: number }) {
-  const full = Math.floor(rating);
-  const partial = rating - full;
-  return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
-      {Array.from({ length: 5 }, (_, i) => {
-        if (i < full) return <Star key={i} size={14} fill="#f59e0b" stroke="#f59e0b" />;
-        if (i === full && partial >= 0.5) return <Star key={i} size={14} fill="#f59e0b" stroke="#f59e0b" style={{ opacity: 0.6 }} />;
-        return <Star key={i} size={14} stroke="#d1d5db" fill="none" />;
-      })}
-      <span style={{ marginLeft: '4px', fontWeight: 'bold', color: '#f59e0b', fontSize: '13px' }}>{rating.toFixed(1)}</span>
-    </span>
-  );
-}
-
-export default function FamilyBooking() {
+export default function FamilyBookingCalendar() {
   const router = useRouter();
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('Morning Shift (8 AM – 12 PM)');
-  const [notes, setNotes] = useState('');
-  const [prefillCaregiver, setPrefillCaregiver] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const [user, setUser] = useState<{ email: string; role: string; name?: string } | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const toast = useToast();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Form State
+  const [date, setDate] = useState('2024-11-18');
+  const [time, setTime] = useState('09:30');
+  const [caregiver, setCaregiver] = useState(MOCK_CAREGIVERS[0].name);
+  const [notes, setNotes] = useState('');
 
   useEffect(() => {
     const lsUser = localStorage.getItem('dgcare_user');
-    if (!lsUser) router.push('/login');
-    else setUser(JSON.parse(lsUser));
+    if (!lsUser) {
+      router.push('/login');
+    } else {
+      setUser(JSON.parse(lsUser));
+    }
     loadBookings();
   }, [router]);
 
@@ -100,264 +48,320 @@ export default function FamilyBooking() {
     setBookings(stored);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    // Simulate real network request
-    await new Promise(resolve => setTimeout(resolve, 1200));
+  const handleLogout = () => {
+    localStorage.removeItem('dgcare_user');
+    localStorage.removeItem('dgcare_bookings');
+    localStorage.removeItem('caregiver_verified');
+    router.push('/login');
+  };
 
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
     const newBooking: Booking = {
       id: Date.now(),
       date,
       time,
       notes,
       status: 'pending',
-      caregiver: prefillCaregiver || undefined,
+      caregiver,
     };
     const current = JSON.parse(localStorage.getItem('dgcare_bookings') || '[]');
     const updated = [...current, newBooking];
     localStorage.setItem('dgcare_bookings', JSON.stringify(updated));
     setBookings(updated);
-    
-    setIsSubmitting(false);
-    toast.success('Your care session has been successfully booked!');
-    
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setDate('');
-      setTime('Morning Shift (8 AM – 12 PM)');
-      setNotes('');
-      setPrefillCaregiver('');
-    }, 3000);
+    setIsModalOpen(false);
+    setDate('2024-11-18');
+    setTime('09:30');
+    setNotes('');
   };
-
-  const handleCancel = (id: number) => {
-    const updated: Booking[] = bookings.map((b) => b.id === id ? { ...b, status: 'cancelled' as const } : b);
-    localStorage.setItem('dgcare_bookings', JSON.stringify(updated));
-    setBookings(updated);
-    toast.error('Booking session cancelled.');
-  };
-
-  const handleRequestCaregiver = (cg: Caregiver) => {
-    setPrefillCaregiver(cg.name);
-    setNotes(`Requesting ${cg.name} – ${cg.specialty}.`);
-    document.getElementById('booking-form-section')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const activeBookings = bookings.filter((b) => b.status !== 'cancelled');
 
   if (!user) return <FullPageSkeleton role="family" />;
 
   return (
-    <div className="dashboard-layout">
-      <Sidebar role="family" userName={user.name || ''} />
-
-      <div className="main-content">
-        {/* ── Header ── */}
-        <header className="mb-10 animate-fade-in-up">
-          <h1 className="text-3xl font-black text-primary tracking-tight mb-2">
-            Caregiver Bookings
-          </h1>
-          <p className="text-slate-500 font-medium md:text-lg">
-            Browse verified providers, request care, and manage your schedule.
-          </p>
-        </header>
-
-        {/* ── Browse Caregivers ── */}
-        <section className="mb-12 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-          <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2.5 tracking-tight">
-            <Users size={24} className="text-primary" /> Browse Verified Caregivers
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {MOCK_CAREGIVERS.map((cg) => (
-              <div
-                key={cg.id}
-                className={`premium-card flex flex-col gap-5 border border-slate-100 ${cg.available ? 'hover:border-primary/20 hover:ring-4 hover:ring-primary/5 cursor-pointer' : 'opacity-70 grayscale-[30%]'}`}
-              >
-                {/* Avatar + Name */}
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full text-white flex items-center justify-center font-black text-lg shadow-inner shrink-0" style={{ backgroundColor: cg.color }}>
-                    {cg.initials}
-                  </div>
-                  <div className="flex-1 overflow-hidden">
-                    <div className="font-bold text-lg text-slate-900 truncate">{cg.name}</div>
-                    <div className="text-sm font-medium text-slate-500 truncate mt-0.5">{cg.specialty}</div>
-                  </div>
-                </div>
-
-                {/* Rating + Badge */}
-                <div className="flex items-center justify-between">
-                  <StarRating rating={cg.rating} />
-                  <span className={`text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 border ${cg.available ? 'bg-green-50 text-green-700 border-green-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
-                    {cg.available ? <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"/> : <div className="w-1.5 h-1.5 rounded-full bg-slate-400"/>}
-                    {cg.available ? 'Available' : 'Busy'}
-                  </span>
-                </div>
-
-                {/* Verified badge */}
-                <div className="flex items-center gap-2 text-sm text-green-700 font-bold bg-green-50/50 p-2.5 rounded-lg border border-green-100/50">
-                  <ShieldCheck size={16} /> DGCare Background Verified
-                </div>
-
-                {/* CTA */}
-                <button
-                  onClick={() => handleRequestCaregiver(cg)}
-                  disabled={!cg.available}
-                  className={`mt-1 py-3 px-4 font-bold rounded-xl transition-all shadow-sm w-full outline-none focus:ring-4 ${
-                    cg.available 
-                      ? 'bg-primary text-white hover:bg-primary-container hover:shadow-md focus:ring-primary/20 active:scale-[0.98]' 
-                      : 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none border border-slate-200'
-                  }`}
-                >
-                  {cg.available ? 'Request This Caregiver' : 'Currently Unavailable'}
-                </button>
-              </div>
-            ))}
+    <>
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+      <div className="bg-surface font-body text-on-surface flex min-h-screen antialiased">
+        
+        {/* Sidebar Navigation */}
+        <aside className="hidden md:flex flex-col p-6 gap-y-4 h-screen w-64 bg-slate-50 sticky top-0 border-r border-outline-variant/30 z-40 transition-transform duration-300">
+          <div className="mb-8 px-2 flex justify-between items-center">
+            <Link href="/">
+              <img src="/logo.jpg" alt="DGCare Logo" className="h-10 w-auto mb-1" />
+              <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500 mt-1">Family Portal</p>
+            </Link>
           </div>
-        </section>
-
-        {/* ── New Booking Form ── */}
-        <section id="booking-form-section" className="mb-12 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-          <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2.5 tracking-tight">
-            <CalendarDays size={24} className="text-primary" /> Schedule a Caregiver
-          </h2>
-          <div className="premium-card max-w-2xl border-t-[6px] border-t-primary">
-            {submitted ? (
-              <div className="text-center py-12 flex flex-col items-center justify-center gap-4 animate-fade-in">
-                <div className="text-green-500 bg-green-50 p-4 rounded-full">
-                  <CheckCircle size={56} />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-black tracking-tight text-slate-900 mb-2">Booking Request Sent!</h3>
-                  <p className="text-slate-500 font-medium">The caregiver will be notified immediately. They will confirm the shift shortly.</p>
-                </div>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-                {prefillCaregiver && (
-                  <div className="px-5 py-4 bg-green-50 border border-green-200 rounded-xl flex items-center justify-between text-green-800 font-bold shadow-sm animate-fade-in">
-                    <div className="flex items-center gap-3">
-                      <ShieldCheck size={20} className="text-green-600" />
-                      Requesting specifically: <span className="text-green-900 text-lg">{prefillCaregiver}</span>
-                    </div>
-                    <button type="button" onClick={() => { setPrefillCaregiver(''); setNotes(''); }} className="text-green-600 hover:text-green-900 hover:bg-green-200/50 p-2 rounded-lg transition-colors cursor-pointer">
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                )}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-2">
-                      <CalendarDays size={16} className="text-slate-400" /> Requested Date
-                    </label>
-                    <input 
-                      required type="date" min={new Date().toISOString().split('T')[0]} value={date} onChange={e => setDate(e.target.value)} 
-                      className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none" 
-                    />
-                  </div>
-                  <div>
-                    <label className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-2">
-                      <Clock size={16} className="text-slate-400" /> Preferred Shift Timing
-                    </label>
-                    <select
-                      required value={time} onChange={e => setTime(e.target.value)}
-                      className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none cursor-pointer"
-                    >
-                      <option value="Morning Shift (8 AM – 12 PM)">🌅 Morning Shift (8 AM – 12 PM)</option>
-                      <option value="Afternoon Shift (12 PM – 4 PM)">☀️ Afternoon Shift (12 PM – 4 PM)</option>
-                      <option value="Evening Shift (4 PM – 8 PM)">🌆 Evening Shift (4 PM – 8 PM)</option>
-                      <option value="Night Shift (8 PM – 8 AM)">🌙 Night Shift (8 PM – 8 AM)</option>
-                      <option value="Full Day (8 AM – 8 PM)">📅 Full Day (8 AM – 8 PM)</option>
-                      <option value="24-Hour Care">🏥 24-Hour Care</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-2">
-                    <StickyNote size={16} className="text-slate-400" /> Special Care Instructions <span className="font-normal text-slate-400">(Optional)</span>
-                  </label>
-                  <textarea 
-                    value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="e.g. Please ensure 2pm medication is given after lunch..." 
-                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none resize-y min-h-[100px]" 
-                  />
-                </div>
-                <button type="submit" disabled={isSubmitting} className="w-full btn-medical btn-medical-primary flex items-center justify-center gap-2 mt-2">
-                  {isSubmitting ? <><Loader2 size={20} className="animate-spin" /> Processing Secure Payload...</> : 'Submit Booking Request'}
-                </button>
-              </form>
-            )}
+          <nav className="flex-1 space-y-2">
+            <Link className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-200/50 rounded-xl transition-transform duration-300 hover:translate-x-1 font-semibold" href="/dashboard/family">
+              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>monitoring</span>
+              <span>Monitoring Center</span>
+            </Link>
+            <Link className="flex items-center gap-3 px-4 py-3 bg-primary/10 text-primary rounded-xl shadow-sm transition-transform duration-300 hover:translate-x-1 font-bold" href="/dashboard/family/booking">
+              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>event_available</span>
+              <span>Bookings</span>
+            </Link>
+            <a className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-200/50 rounded-xl transition-transform duration-300 hover:translate-x-1 font-semibold" href="#">
+              <span className="material-symbols-outlined">person_search</span>
+              <span>Caregivers</span>
+            </a>
+            <a className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-200/50 rounded-xl transition-transform duration-300 hover:translate-x-1 relative font-semibold" href="#">
+              <span className="material-symbols-outlined">chat</span>
+              <span>Messages</span>
+              <span className="absolute right-4 w-2 h-2 bg-primary rounded-full"></span>
+            </a>
+            <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 mt-4 text-red-500 hover:bg-red-50 rounded-xl font-semibold transition-transform duration-300 hover:translate-x-1 w-full text-left">
+              <LogOut size={18} />
+              <span>Logout</span>
+            </button>
+          </nav>
+          <div className="mt-auto pt-6 border-t border-slate-200">
+            <button onClick={() => setIsModalOpen(true)} className="w-full bg-primary hover:bg-primary-container text-white py-4 rounded-full font-bold text-sm transition-all shadow-md active:scale-95 flex items-center justify-center gap-2">
+              <span className="material-symbols-outlined text-lg">add</span>
+              New Booking
+            </button>
           </div>
-        </section>
+        </aside>
 
-        {/* ── My Bookings ── */}
-        <section className="pb-12 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-          <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2.5 tracking-tight">
-            <Clock size={24} className="text-primary" /> My Requested Bookings
-            {bookings.length > 0 && (
-              <span className="text-xs ml-2 bg-primary/10 text-primary px-3 py-1 rounded-full font-bold shadow-sm">
-                {activeBookings.length} Active Sessions
-              </span>
-            )}
-          </h2>
-
-          {bookings.length === 0 ? (
-            <div className="bg-white border-2 border-dashed border-slate-200 p-16 rounded-2xl text-center text-slate-400 flex flex-col items-center justify-center min-h-[250px]">
-              <div className="w-20 h-20 rounded-full bg-slate-50 flex flex-col items-center justify-center mb-4">
-                 <CalendarDays size={40} className="opacity-50 text-slate-400" />
-              </div>
-              <p className="font-medium text-lg text-slate-600 tracking-tight">No active care requests found.</p>
-              <p className="text-sm mt-1 opacity-80">Submit a form above to schedule a DGCare professional.</p>
+        {/* Main Content Canvas */}
+        <main className="flex-1 p-4 md:p-8 lg:p-12 overflow-y-auto">
+          
+          {/* Header Section */}
+          <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6 pb-2 border-b border-surface-container-high">
+            <div>
+              <h2 className="font-headline text-4xl font-extrabold text-on-surface tracking-tight mb-2">Schedule Overview</h2>
+              <p className="text-on-surface-variant font-body text-lg">Manage clinical sessions and patient consultations.</p>
             </div>
-          ) : (
-            <div className="flex flex-col gap-4 max-w-4xl">
-              {[...bookings].reverse().map((booking) => {
-                const s = STATUS_STYLES[booking.status] || STATUS_STYLES.pending;
-                return (
-                  <div
-                    key={booking.id}
-                    className={`premium-card p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 border border-slate-100 ${booking.status === 'cancelled' ? 'opacity-60 bg-slate-50 shadow-none hover:shadow-none' : ''}`}
-                  >
-                    <div className="flex flex-col gap-2.5 flex-1 w-full">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <span className="font-black text-lg text-slate-900 tracking-tight">
-                          {booking.caregiver || 'Any Available Caregiver'}
-                        </span>
-                        <span className="text-xs font-bold px-3 py-1 rounded-full border shadow-sm" style={{ backgroundColor: s.bg, color: s.color, borderColor: `${s.color}30` }}>
-                          {s.label.toUpperCase()}
-                        </span>
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-x-6 gap-y-3 mt-1 font-medium text-slate-600 bg-slate-50/80 p-3 rounded-xl border border-slate-100">
-                        <span className="flex items-center gap-2"><CalendarDays size={16} className="text-primary" /> {booking.date}</span>
-                        <span className="flex items-center gap-2"><Clock size={16} className="text-amber-500" /> {booking.time}</span>
-                      </div>
-                      
-                      {booking.notes && (
-                        <div className="text-sm font-medium text-slate-500 flex items-start gap-2 mt-2 bg-blue-50/50 p-3 rounded-xl border border-blue-100/50 italic">
-                          <StickyNote size={16} className="text-blue-500 shrink-0 mt-0.5" />
-                          <span className="leading-relaxed">"{booking.notes}"</span>
+            <div className="flex items-center bg-surface-container-lowest rounded-full p-1.5 shadow-sm border border-slate-200">
+              <button className="px-6 py-2 rounded-full bg-white text-primary font-bold text-sm shadow-sm transition-all">Monthly</button>
+              <button className="px-6 py-2 rounded-full text-slate-500 font-bold text-sm hover:bg-slate-100 transition-all">Weekly</button>
+            </div>
+          </header>
+
+          {/* Calendar Grid Layout (Bento-style Asymmetry) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            {/* Main Calendar Interface */}
+            <div className="lg:col-span-8 bg-surface-container-lowest rounded-[2rem] p-6 md:p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
+              <div className="flex justify-between items-center mb-8">
+                <h3 className="font-headline text-2xl font-bold tracking-tight">November 2024</h3>
+                <div className="flex gap-2">
+                  <button className="p-2 hover:bg-slate-100 rounded-full transition-colors"><span className="material-symbols-outlined">chevron_left</span></button>
+                  <button className="p-2 hover:bg-slate-100 rounded-full transition-colors"><span className="material-symbols-outlined">chevron_right</span></button>
+                </div>
+              </div>
+
+              {/* Calendar Weekdays */}
+              <div className="grid grid-cols-7 mb-4 border-b border-slate-100 pb-4">
+                <div className="text-center font-bold text-xs uppercase tracking-widest text-slate-400">Mon</div>
+                <div className="text-center font-bold text-xs uppercase tracking-widest text-slate-400">Tue</div>
+                <div className="text-center font-bold text-xs uppercase tracking-widest text-slate-400">Wed</div>
+                <div className="text-center font-bold text-xs uppercase tracking-widest text-slate-400">Thu</div>
+                <div className="text-center font-bold text-xs uppercase tracking-widest text-slate-400">Fri</div>
+                <div className="text-center font-bold text-xs uppercase tracking-widest text-primary">Sat</div>
+                <div className="text-center font-bold text-xs uppercase tracking-widest text-primary">Sun</div>
+              </div>
+
+              {/* Days Grid (Mocked elegantly for MVP) */}
+              <div className="grid grid-cols-7 gap-px bg-slate-100 border border-slate-100 rounded-xl overflow-hidden">
+                {/* Week 1 */}
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-slate-50 opacity-40 text-sm font-semibold">28</div>
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-slate-50 opacity-40 text-sm font-semibold">29</div>
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-slate-50 opacity-40 text-sm font-semibold">30</div>
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-slate-50 opacity-40 text-sm font-semibold">31</div>
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-white text-sm font-semibold hover:bg-slate-50 cursor-pointer transition-colors">
+                  <span>1</span>
+                  <div className="mt-2 p-1.5 bg-primary/10 border border-primary/20 text-[10px] text-primary rounded-lg font-bold truncate">Confirmed S.</div>
+                </div>
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-teal-50/50 text-sm font-bold text-primary">2</div>
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-teal-50/50 text-sm font-bold text-primary">3</div>
+                
+                {/* Week 2 */}
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-white text-sm font-semibold hover:bg-slate-50 cursor-pointer transition-colors">4</div>
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-white text-sm font-semibold hover:bg-slate-50 cursor-pointer transition-colors">
+                  <span>5</span>
+                  <div className="mt-2 p-1.5 bg-amber-50 border border-amber-200 text-[10px] text-amber-700 rounded-lg font-bold truncate">Check-up</div>
+                </div>
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-primary-container/10 border-2 border-primary/40 rounded-xl relative text-sm font-black shadow-inner">
+                  <span className="text-primary">6</span>
+                  <div className="mt-2 p-1.5 bg-primary text-[10px] text-white rounded-lg font-bold shadow-md shadow-primary/30 uppercase tracking-widest text-center truncate">Today</div>
+                </div>
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-white text-sm font-semibold hover:bg-slate-50 cursor-pointer transition-colors">7</div>
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-white text-sm font-semibold hover:bg-slate-50 cursor-pointer transition-colors">
+                  <span>8</span>
+                  <div className="mt-2 p-1.5 bg-slate-100 text-slate-600 text-[10px] rounded-lg font-bold truncate">Pending (3)</div>
+                </div>
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-teal-50/50 text-sm font-bold text-primary">9</div>
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-teal-50/50 text-sm font-bold text-primary">10</div>
+
+                {/* Week 3 */}
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-white text-sm font-semibold hover:bg-slate-50 cursor-pointer transition-colors">11</div>
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-white text-sm font-semibold hover:bg-slate-50 cursor-pointer transition-colors">12</div>
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-white text-sm font-semibold hover:bg-slate-50 cursor-pointer transition-colors">13</div>
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-white text-sm font-semibold hover:bg-slate-50 cursor-pointer transition-colors">14</div>
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-white text-sm font-semibold hover:bg-slate-50 cursor-pointer transition-colors">15</div>
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-teal-50/50 text-sm font-bold text-primary">16</div>
+                <div className="h-28 md:h-32 p-2 md:p-3 bg-teal-50/50 text-sm font-bold text-primary">17</div>
+              </div>
+            </div>
+
+            {/* Side Interaction Rail */}
+            <div className="lg:col-span-4 flex flex-col gap-8">
+              
+              {/* Quick Booking Card */}
+              <div className="bg-primary text-white rounded-[2rem] p-8 shadow-2xl shadow-primary/30 relative overflow-hidden group">
+                <div className="relative z-10">
+                  <h4 className="font-headline text-2xl font-extrabold mb-2 tracking-tight">Book Appointment</h4>
+                  <p className="text-white/80 text-sm mb-6 font-medium leading-relaxed">Instantly schedule a secure clinical session with available verified specialists.</p>
+                  <button onClick={() => setIsModalOpen(true)} className="w-full bg-white text-primary py-4 rounded-xl font-bold text-sm shadow-lg hover:scale-[1.02] active:scale-95 transition-all text-center uppercase tracking-widest">
+                    Open Schedule Form
+                  </button>
+                </div>
+                <div className="absolute -bottom-16 -right-16 w-64 h-64 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+              </div>
+
+              {/* Status Indicators / Upcoming */}
+              <div className="bg-surface-container-lowest rounded-[2rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100 flex-1">
+                <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
+                  <h4 className="font-headline text-xl font-bold tracking-tight">Upcoming Active</h4>
+                  <span className="text-xs font-bold text-primary uppercase tracking-widest cursor-pointer hover:underline">View History</span>
+                </div>
+                
+                <div className="space-y-6">
+                  {/* Dynamic Bookings Array */}
+                  {bookings.map((booking) => (
+                    <div key={booking.id} className="flex items-start gap-4">
+                      <div className={`w-1.5 h-16 rounded-full self-stretch ${booking.status === 'confirmed' ? 'bg-primary' : 'bg-amber-400'}`}></div>
+                      <div className="flex-1">
+                        <p className="font-bold text-slate-800">{booking.caregiver || 'Session Request'}</p>
+                        <p className="text-xs text-slate-500 font-medium my-1">{booking.date} • {booking.time}</p>
+                        <div className="flex justify-between items-center mt-2">
+                           <span className={`px-2 py-1 text-[10px] rounded-md font-bold uppercase tracking-widest
+                             ${booking.status === 'pending' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-primary/10 text-primary border border-primary/20'}
+                           `}>
+                             {booking.status}
+                           </span>
                         </div>
-                      )}
+                      </div>
                     </div>
+                  ))}
 
-                    {booking.status !== 'cancelled' && (
-                      <button
-                        onClick={() => handleCancel(booking.id)}
-                        title="Cancel booking session"
-                        className="flex items-center justify-center gap-2 px-5 py-3 bg-white text-red-600 hover:text-white border border-red-200 hover:bg-red-500 hover:border-red-500 rounded-xl font-bold text-sm transition-all shadow-sm hover:shadow-md shrink-0 w-full sm:w-auto mt-2 sm:mt-0 active:scale-95 group"
-                      >
-                        <Trash2 size={16} className="mt-[-1px] transition-colors group-hover:text-white" /> Cancel Booking
-                      </button>
-                    )}
+                  {bookings.length === 0 && (
+                    <p className="text-sm text-slate-400 italic">No dynamic bookings created yet.</p>
+                  )}
+
+                  {/* Mock Confirmed Item (From HTML design) */}
+                  <div className="flex items-start gap-4 opacity-70">
+                    <div className="w-1.5 h-16 bg-primary rounded-full self-stretch"></div>
+                    <div>
+                      <p className="font-bold text-slate-800">Post-Op Clinical Review</p>
+                      <p className="text-xs text-slate-500 font-medium my-1">Nov 15 • 02:30 PM</p>
+                      <span className="px-2 py-1 mt-2 inline-block bg-primary/10 text-primary text-[10px] rounded-md font-bold uppercase tracking-widest border border-primary/20">Confirmed</span>
+                    </div>
                   </div>
-                );
-              })}
+
+                  {/* Avatar Stack for Specialists */}
+                  <div className="pt-8 mt-4 border-t border-slate-100">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Available Specialists Online</p>
+                    <div className="flex -space-x-3">
+                      <img className="w-12 h-12 rounded-full border-2 border-white object-cover shadow-sm bg-slate-100" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpLwJRjLXKXILhZT3sUtYkMLmtSetBIGqD6Zj0QEUCkQHaBbJGzF6Ud4DIa_fGs-LRJd7xlYUT0HkIcFp8isj5FLm9LFUGqN7OQLrULPp79pTld0wItSnRvOCtE3IyajsVB_AT7X_gTnc9QAi4neLuFYUqm9XSRqMQ_Ey_ATE2KvFfembv8HXXAiiUFgN5-IAcLZNstflEJuwnnPFET3gtZhySGLjDSmgMLvmGILN-bhtQwaeFM_xfI6tV1eLcuw55LhKdJi65Ttc" alt="Caregiver" />
+                      <img className="w-12 h-12 rounded-full border-2 border-white object-cover shadow-sm bg-slate-100" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPUq6yC9hc3chANxSgBKKi2RsD1fmay4DfYWgF5jMOFljc_VvuQ9W5Ay_t-Jt66ZDRac4sV-Vbfs64aCxPHDgb8TF8WSF7FSPaBB-IZ0UjSx-IjXdA7OahdtUiXr9hvigQOjGOhjoQlyZajdxln550FP2_syjxmQre3GaD_YwuignPGPJ5Q4o7CeXG-MNceapp9QoiLOnfsrNsN9LcgGe0-GM3Rv60zBsnaJNi4fggguNy7nY65mP5glxHyO43z9ab_9-iZdXkLD0" alt="Caregiver" />
+                      <div className="w-12 h-12 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-xs font-bold text-slate-500 shadow-sm">+12</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
             </div>
-          )}
-        </section>
+          </div>
+        </main>
       </div>
-    </div>
+
+      {/* Booking Modal (State Controlled) */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={(e) => { if(e.target === e.currentTarget) setIsModalOpen(false)}}>
+          <div className="bg-white rounded-[2.5rem] w-full max-w-xl overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-200">
+            <div className="p-8 lg:p-12">
+              <div className="flex justify-between items-center mb-8">
+                <div>
+                  <h3 className="font-headline text-3xl font-extrabold tracking-tight text-slate-900">Schedule Session</h3>
+                  <p className="text-slate-500 font-medium text-sm mt-1">Select time and clinical parameters</p>
+                </div>
+                <button onClick={() => setIsModalOpen(false)} className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full transition-colors">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Preferred Date</label>
+                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center gap-3 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                      <span className="material-symbols-outlined text-primary">calendar_month</span>
+                      <input type="date" required value={date} onChange={e => setDate(e.target.value)} className="bg-transparent border-none p-0 focus:ring-0 w-full font-bold text-sm text-slate-800" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Time Slot</label>
+                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center gap-3 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                      <span className="material-symbols-outlined text-primary">schedule</span>
+                      <input type="time" required value={time} onChange={e => setTime(e.target.value)} className="bg-transparent border-none p-0 focus:ring-0 w-full font-bold text-sm text-slate-800" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Caregiver Specialist</label>
+                  <select required value={caregiver} onChange={e => setCaregiver(e.target.value)} className="w-full border border-slate-200 bg-slate-50 rounded-2xl p-4 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-primary/20 outline-none">
+                    {MOCK_CAREGIVERS.map(cg => (
+                      <option key={cg.id} value={cg.name}>{cg.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Clinical Notes</label>
+                  <textarea 
+                    value={notes} onChange={e => setNotes(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none h-32 resize-none text-slate-800" 
+                    placeholder="Enter session objectives or patient history for the caregiver..."
+                  ></textarea>
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                  <button onClick={() => setIsModalOpen(false)} className="flex-1 px-8 py-4 text-slate-600 font-bold text-sm bg-slate-100 rounded-full hover:bg-slate-200 transition-colors uppercase tracking-widest" type="button">
+                    Cancel
+                  </button>
+                  <button className="flex-[2] px-8 py-4 bg-primary text-white font-bold text-sm rounded-full shadow-lg shadow-primary/30 hover:bg-primary-container hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest" type="submit">
+                    Confirm Appointment
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Nav */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-2xl px-6 py-4 flex justify-between items-center z-50 border-t border-slate-200 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
+        <Link className="flex flex-col items-center gap-1.5 text-slate-400" href="/dashboard/family">
+          <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 0" }}>monitoring</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest">Home</span>
+        </Link>
+        <Link className="flex flex-col items-center gap-1.5 text-primary" href="/dashboard/family/booking">
+          <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>event_available</span>
+          <span className="text-[10px] font-black uppercase tracking-widest">Schedule</span>
+        </Link>
+        <button onClick={() => setIsModalOpen(true)} className="w-14 h-14 bg-primary rounded-full flex items-center justify-center -mt-8 shadow-xl shadow-teal-900/30 text-white transform hover:scale-105 active:scale-95 transition-all border-4 border-white">
+          <span className="material-symbols-outlined text-[32px]">add</span>
+        </button>
+        <a className="flex flex-col items-center gap-1.5 text-slate-400" href="#">
+          <span className="material-symbols-outlined text-[28px]">chat</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest">Chat</span>
+        </a>
+      </nav>
+    </>
   );
 }

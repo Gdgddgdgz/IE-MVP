@@ -23,26 +23,23 @@ export default function Sidebar({ role, userName, isVerified }: SidebarProps) {
     localStorage.removeItem('dgcare_user');
     localStorage.removeItem('dgcare_bookings');
     localStorage.removeItem('caregiver_verified');
-    localStorage.removeItem('caregiver_verification_pending');
-    localStorage.removeItem('caregiver_pin');
     router.push('/login');
   };
 
-  const bgClass = 'bg-primary';
+  const bgColor = role === 'family' ? 'var(--primary-green)' : '#093a31';
   const roleInitial = role === 'family' ? 'F' : 'C';
-  const roleName = role === 'family' ? 'Family Guardian' : 'Clinical Provider';
+  const roleName = role === 'family' ? 'Family Member' : 'Professional';
+  const title = role === 'family' ? 'DGCare Family' : 'DGCare Provider';
 
   return (
-    <div className={`w-[300px] h-screen sticky top-0 flex flex-col pt-8 pb-6 text-white shadow-medical-float z-40 transition-all duration-300 ease-in-out hidden lg:flex ${bgClass}`}>
-      <div className="flex justify-between items-center mb-10 px-8">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-green-500/20 border border-green-400/30 flex items-center justify-center text-green-300 shrink-0 shadow-inner">
-            <HeartPulse size={24} className="animate-pulse" />
-          </div>
-          <h2 className="text-2xl font-black tracking-tighter">DGCare<span className="text-green-300">.</span></h2>
-        </div>
+    <div className="sidebar" style={{ backgroundColor: bgColor }}>
+      <div className="sidebar-header">
+        <h2 style={{ fontSize: '20px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <img src="/logo.jpg" alt="Logo" style={{ height: '32px', width: 'auto' }} />
+          {title}
+        </h2>
         <button
-          className="lg:hidden bg-transparent border-none text-white cursor-pointer hover:opacity-75 transition-opacity"
+          className="hamburger-btn"
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Toggle menu"
         >
@@ -50,64 +47,145 @@ export default function Sidebar({ role, userName, isVerified }: SidebarProps) {
         </button>
       </div>
 
-      <nav className="flex flex-col gap-1 flex-1">
-        <div className="text-xs font-bold text-green-300/60 uppercase tracking-widest mb-3 px-8">Menu</div>
+      <nav className={`sidebar-nav ${isOpen ? 'open' : ''}`}>
         {role === 'family' ? (
           <>
             <Link
               href="/dashboard/family"
-              className={`flex items-center gap-4 px-8 py-4 font-bold transition-all duration-200 group border-l-4 ${pathname === '/dashboard/family' ? 'bg-black/15 text-white border-green-400 shadow-inner' : 'text-white/60 hover:bg-black/5 hover:text-white border-transparent'}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '14px 16px',
+                backgroundColor: isActive('/dashboard/family'),
+                borderRadius: '8px',
+                fontWeight: '600',
+                transition: 'background 0.2s ease',
+              }}
+              onMouseEnter={(e) => { if (pathname !== '/dashboard/family') e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)' }}
+              onMouseLeave={(e) => { if (pathname !== '/dashboard/family') e.currentTarget.style.backgroundColor = 'transparent' }}
             >
-              <HeartPulse size={22} className={`transition-transform duration-300 group-hover:scale-110 ${pathname === '/dashboard/family' ? 'text-green-300' : 'text-white/40'}`} />
-              Monitoring Center
+              <HeartPulse size={20} /> Monitoring Center
             </Link>
             <Link
               href="/dashboard/family/booking"
-              className={`flex items-center gap-4 px-8 py-4 font-bold transition-all duration-200 group border-l-4 ${pathname === '/dashboard/family/booking' ? 'bg-black/15 text-white border-green-400 shadow-inner' : 'text-white/60 hover:bg-black/5 hover:text-white border-transparent'}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '14px 16px',
+                backgroundColor: isActive('/dashboard/family/booking'),
+                borderRadius: '8px',
+                fontWeight: '600',
+                transition: 'background 0.2s ease',
+              }}
+              onMouseEnter={(e) => { if (pathname !== '/dashboard/family/booking') e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)' }}
+              onMouseLeave={(e) => { if (pathname !== '/dashboard/family/booking') e.currentTarget.style.backgroundColor = 'transparent' }}
             >
-              <Calendar size={22} className={`transition-transform duration-300 group-hover:scale-110 ${pathname === '/dashboard/family/booking' ? 'text-green-300' : 'text-white/40'}`} />
-              Care Bookings
+              <Calendar size={20} /> Bookings
             </Link>
           </>
         ) : (
           <>
             <Link
               href="/dashboard/caregiver"
-              className={`flex items-center gap-4 px-8 py-4 font-bold transition-all duration-200 group border-l-4 ${pathname === '/dashboard/caregiver' ? 'bg-black/15 text-white border-green-400 shadow-inner' : 'text-white/60 hover:bg-black/5 hover:text-white border-transparent'}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '14px 16px',
+                backgroundColor: isActive('/dashboard/caregiver'),
+                borderRadius: '8px',
+                fontWeight: '600',
+                transition: 'background 0.2s ease',
+              }}
+              onMouseEnter={(e) => { if (pathname !== '/dashboard/caregiver') e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)' }}
+              onMouseLeave={(e) => { if (pathname !== '/dashboard/caregiver') e.currentTarget.style.backgroundColor = 'transparent' }}
             >
-              <ShieldCheck size={22} className={`transition-transform duration-300 group-hover:scale-110 ${pathname === '/dashboard/caregiver' ? 'text-green-300' : 'text-white/40'}`} />
-              Shift Control
+              <ShieldCheck size={20} /> Shift Control
             </Link>
             <Link
               href="/dashboard/caregiver/schedule"
-              className={`flex items-center gap-4 px-8 py-4 font-bold transition-all duration-200 group border-l-4 ${pathname === '/dashboard/caregiver/schedule' ? 'bg-black/15 text-white border-green-400 shadow-inner' : 'text-white/60 hover:bg-black/5 hover:text-white border-transparent'}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '14px 16px',
+                backgroundColor: isActive('/dashboard/caregiver/schedule'),
+                borderRadius: '8px',
+                fontWeight: '600',
+                transition: 'background 0.2s ease',
+              }}
+              onMouseEnter={(e) => { if (pathname !== '/dashboard/caregiver/schedule') e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)' }}
+              onMouseLeave={(e) => { if (pathname !== '/dashboard/caregiver/schedule') e.currentTarget.style.backgroundColor = 'transparent' }}
             >
-              <Clock size={22} className={`transition-transform duration-300 group-hover:scale-110 ${pathname === '/dashboard/caregiver/schedule' ? 'text-green-300' : 'text-white/40'}`} />
-              Booking Inbox
+              <Clock size={20} /> Booking Schedule
             </Link>
           </>
         )}
 
-        <div className="mt-auto px-6 flex flex-col gap-4">
+        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3.5 bg-red-500/10 hover:bg-red-500 text-red-200 hover:text-white rounded-xl font-bold transition-all duration-300 group cursor-pointer border border-red-500/20 hover:border-red-500 shadow-sm"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px',
+              backgroundColor: 'rgba(239, 68, 68, 0.2)',
+              color: '#fca5a5',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+            }}
           >
-            <LogOut size={18} className="transition-transform duration-300 group-hover:-translate-x-1" />
-            Secure Sign Out
+            <LogOut size={20} /> Logout
           </button>
           
-          <div className="p-4 bg-black/20 rounded-xl flex items-center gap-3 border border-white/10 shadow-inner mt-2 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-white/5 rounded-full blur-xl -mr-8 -mt-8 pointer-events-none"></div>
-            <div className={`w-10 h-10 bg-white rounded-full flex items-center justify-center font-black text-lg shadow-sm shrink-0 ${role === 'family' ? 'text-primary' : 'text-primary'}`}>
+          <div
+            style={{
+              padding: '16px',
+              backgroundColor: 'rgba(255,255,255,0.1)',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+            }}
+          >
+            <div
+              style={{
+                width: '40px',
+                height: '40px',
+                backgroundColor: '#fff',
+                borderRadius: '50%',
+                color: bgColor,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 'bold',
+                flexShrink: 0
+              }}
+            >
               {roleInitial}
             </div>
-            <div className="overflow-hidden z-10">
-              <div className="font-bold text-sm flex items-center gap-1.5 truncate text-white">
-                <span className="truncate">{userName || (role === 'family' ? 'Family' : 'Pro Caregiver')}</span>
-                {role === 'caregiver' && isVerified && <span title="Verified DGCare Provider" className="shrink-0 flex"><ShieldCheck size={14} className="text-green-400" /></span>}
+            <div style={{ overflow: 'hidden' }}>
+              <div
+                style={{
+                  fontWeight: 'bold',
+                  fontSize: '14px',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                {userName || (role === 'family' ? 'Family' : 'Pro Caregiver')}
+                {role === 'caregiver' && isVerified && <span title="Verified">✅</span>}
               </div>
-              <div className="text-xs text-white/50 font-bold tracking-wider uppercase mt-0.5">{roleName}</div>
+              <div style={{ fontSize: '12px', opacity: 0.8 }}>{roleName}</div>
             </div>
           </div>
         </div>

@@ -44,7 +44,7 @@ export default function Login() {
       <div className="flex-1 flex items-center justify-center p-8 bg-surface">
         <div className="w-full max-w-md">
           <div className="mb-10 lg:hidden">
-            <span className="text-2xl font-black text-primary tracking-tighter">DGCare</span>
+            <img src="/logo.jpg" alt="DGCare Logo" className="h-12 w-auto" />
           </div>
 
           <div className="premium-card p-10 border border-slate-100">

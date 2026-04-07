@@ -1,81 +1,14 @@
-// FIXED
 'use client';
+
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { AlertTriangle, Key, MapPin, HeartPulse, Pill, Clock } from 'lucide-react';
-import { useToast } from '@/components/ToastProvider';
+import { AlertTriangle, LogOut, Phone } from 'lucide-react';
 import io from 'socket.io-client';
-import Sidebar from '@/components/Sidebar';
 import { FullPageSkeleton } from '@/components/SkeletonLoader';
+import Link from 'next/link';
 
 const Map = dynamic(() => import('@/components/Map'), { ssr: false });
-
-/* ─── Animated heart-rate display ─── */
-function HeartRateWidget({ bpm }: { bpm: number }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-      <div style={{ color: 'var(--text-light)', fontSize: '13px', marginBottom: '4px' }}>
-        Loved One Heart Rate
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        {/* Beating heart icon */}
-        <HeartPulse
-          size={28}
-          color="#ef4444"
-          style={{ animation: 'heartbeat 0.8s ease-in-out infinite' }}
-        />
-        <span style={{ fontSize: '26px', fontWeight: 'bold', color: 'var(--primary-green)', fontVariantNumeric: 'tabular-nums' }}>
-          {bpm} <span style={{ fontSize: '15px', color: 'var(--text-light)', fontWeight: 'normal' }}>BPM</span>
-        </span>
-        <span style={{ fontSize: '12px', fontWeight: 'bold', padding: '3px 10px', borderRadius: '99px', backgroundColor: '#f0fdf4', color: '#15803d' }}>
-          Normal
-        </span>
-      </div>
-      {/* Mini ECG bar */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: '22px', marginTop: '4px' }}>
-        {[4, 8, 5, 16, 5, 9, 4, 12, 6, 10, 4, 7, 5, 14, 5, 8, 4].map((h, i) => (
-          <div
-            key={i}
-            style={{
-              width: '3px',
-              height: `${h}px`,
-              borderRadius: '2px',
-              backgroundColor: h > 10 ? '#ef4444' : '#86efac',
-              opacity: 0.85,
-              animation: `ecgPulse 1.2s ease-in-out ${i * 0.07}s infinite`,
-            }}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ─── Next medication widget ─── */
-function NextMedWidget({ nextTime, minutesLeft }: { nextTime: string; minutesLeft: number }) {
-  const urgent = minutesLeft <= 30;
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-      <div style={{ color: 'var(--text-light)', fontSize: '13px', marginBottom: '4px' }}>
-        Next Scheduled Medication
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <Pill size={24} color={urgent ? '#f59e0b' : 'var(--primary-green)'} />
-        <span style={{ fontSize: '26px', fontWeight: 'bold', color: 'var(--primary-green)', fontVariantNumeric: 'tabular-nums' }}>
-          {nextTime}
-        </span>
-      </div>
-      <div style={{ fontSize: '12px', color: urgent ? '#d97706' : 'var(--text-light)', fontWeight: urgent ? '600' : '400', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-        <Clock size={11} />
-        {minutesLeft <= 0
-          ? 'Due now — administer medication!'
-          : `In ${minutesLeft} min${minutesLeft === 1 ? '' : 's'}`}
-        {urgent && minutesLeft > 0 && ' ⚠️'}
-      </div>
-    </div>
-  );
-}
 
 /* ─── Medication schedule ─── */
 const MED_SCHEDULE: { label: string; hour: number; minute: number }[] = [
@@ -94,30 +27,23 @@ function getNextMedication() {
       return { label: med.label, minutesLeft: medMin - nowMin };
     }
   }
-  // Wrap to next day's first
   const first = MED_SCHEDULE[0];
   const minsUntilMidnight = 24 * 60 - nowMin;
   return { label: first.label, minutesLeft: minsUntilMidnight + first.hour * 60 + first.minute };
 }
 
-/* ─── Page ─── */
-export default function FamilyDashboard() {
+export default function FamilyMonitoringDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<{ email: string; role: string; name?: string } | null>(null);
   const [sosActive, setSosActive] = useState(false);
   const [roomPin, setRoomPin] = useState('');
   const [activePin, setActivePin] = useState('');
   const [caregiverVerified, setCaregiverVerified] = useState(false);
-  const toast = useToast();
-  const socketRef = useRef<ReturnType<typeof io> | null>(null);
+  const socketRef = useRef<any>(null);
 
-  // Animated heart rate (76–82 BPM)
   const [heartRate, setHeartRate] = useState(78);
-
-  // Next medication (updates every minute)
   const [nextMed, setNextMed] = useState(getNextMedication);
 
-  /* Auth */
   useEffect(() => {
     const lsUser = localStorage.getItem('dgcare_user');
     if (!lsUser) {
@@ -129,15 +55,13 @@ export default function FamilyDashboard() {
     }
   }, [router]);
 
-  /* Heart rate animation — fluctuate 76–82 every 2 s */
   useEffect(() => {
     const interval = setInterval(() => {
-      setHeartRate(76 + Math.floor(Math.random() * 7)); // 76..82
+      setHeartRate(76 + Math.floor(Math.random() * 7));
     }, 2000);
     return () => clearInterval(interval);
   }, []);
 
-  /* Medication timer — update every 30 s */
   useEffect(() => {
     const interval = setInterval(() => {
       setNextMed(getNextMedication());
@@ -145,14 +69,13 @@ export default function FamilyDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  /* Socket / PIN pairing */
   useEffect(() => {
     if (!user || !activePin) return;
     socketRef.current = io();
     socketRef.current.emit('join_room', `room_${activePin}`);
     socketRef.current.on('sos_alert', () => {
       setSosActive(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      alert(`URGENT: Emergency Tracker Triggered from Room ${activePin}!`);
     });
     if (localStorage.getItem('caregiver_verified') === 'true') {
       setCaregiverVerified(true);
@@ -160,148 +83,354 @@ export default function FamilyDashboard() {
     return () => { if (socketRef.current) socketRef.current.disconnect(); };
   }, [user, activePin]);
 
-  const handleSOS = () => {
-    if (socketRef.current && activePin) {
-      socketRef.current.emit('sos_alert', { roomId: `room_${activePin}`, sender: user?.name || user?.email });
-      setSosActive(true);
-      toast.error('Emergency SOS dispatched to caregiver.');
-    } else {
-      toast.error('Must be paired to a Caregiver PIN to send Emergency Alerts.');
-    }
-  };
-
   const connectToPin = (e: any) => {
     e.preventDefault();
     setActivePin(roomPin);
-    toast.success('Secured encrypted connection to provider.');
   };
+
+  const handleLogout = () => {
+    localStorage.removeItem('dgcare_user');
+    localStorage.removeItem('dgcare_bookings');
+    localStorage.removeItem('caregiver_verified');
+    router.push('/login');
+  };
+
+  const urgentMed = nextMed.minutesLeft <= 30;
 
   if (!user) return <FullPageSkeleton role="family" />;
 
   return (
     <>
-      {/* Keyframe animations injected once */}
       <style>{`
-        @keyframes heartbeat {
-          0%, 100% { transform: scale(1); }
-          14%       { transform: scale(1.25); }
-          28%       { transform: scale(1); }
-          42%       { transform: scale(1.15); }
-          70%       { transform: scale(1); }
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #00665d33; border-radius: 10px; }
         @keyframes ecgPulse {
-          0%, 100% { opacity: 0.5; }
-          50%       { opacity: 1; }
-        }
-        @keyframes bpmFade {
-          from { opacity: 0.4; transform: translateY(-4px); }
-          to   { opacity: 1;   transform: translateY(0); }
+          0%, 100% { transform: scaleY(0.7); opacity: 0.8; }
+          50% { transform: scaleY(1); opacity: 1; }
         }
       `}</style>
-
-      <div className="dashboard-layout">
-        <Sidebar role="family" userName={user.name || ''} />
-
-        <div className="main-content">
-          {/* ── Header ── */}
-          <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 animate-fade-in-up">
-            <div>
-              <h1 className="text-3xl font-black text-primary tracking-tight">Family Monitoring Center</h1>
-              <p className="text-slate-500 font-medium mt-1 text-sm md:text-base">Real-time health and safety oversight for your loved ones.</p>
+      
+      <div className="bg-surface font-body text-on-surface antialiased flex overflow-hidden h-screen">
+        
+        {/* Sidebar Navigation */}
+        <aside className="hidden md:flex h-screen w-64 bg-slate-50 flex-col p-6 gap-y-4 shrink-0 overflow-y-auto border-r border-outline-variant/10 z-40">
+          <div className="mb-8 px-2 flex justify-between items-center">
+            <Link href="/">
+              <img src="/logo.jpg" alt="DGCare Logo" className="h-10 w-auto mb-1" />
+              <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500 mt-1">Family Portal</p>
+            </Link>
+          </div>
+          <nav className="flex-1 space-y-2">
+            <Link className="flex items-center gap-3 px-4 py-3 bg-white text-teal-700 shadow-sm rounded-xl font-bold transition-all duration-300 text-sm" href="/dashboard/family">
+              <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>monitoring</span>
+              <span>Monitoring Core</span>
+            </Link>
+            <Link className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-200/50 hover:translate-x-1 rounded-xl font-semibold transition-all duration-300 text-sm" href="/dashboard/family/booking">
+              <span className="material-symbols-outlined">event_available</span>
+              <span>Bookings / Schedule</span>
+            </Link>
+            <a className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-200/50 hover:translate-x-1 rounded-xl font-semibold transition-all duration-300 text-sm" href="#">
+              <span className="material-symbols-outlined">family_restroom</span>
+              <span>Profiles</span>
+            </a>
+            <a className="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-200/50 hover:translate-x-1 rounded-xl font-semibold transition-all duration-300 text-sm" href="#">
+              <span className="material-symbols-outlined">person_search</span>
+              <span>Care Network</span>
+            </a>
+            <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 mt-4 text-red-500 hover:bg-red-50 hover:translate-x-1 rounded-xl font-bold transition-all duration-300 w-full text-left text-sm">
+              <LogOut size={16} />
+              <span>Sign Out</span>
+            </button>
+          </nav>
+          
+          <div className="mt-auto pt-6 border-t border-slate-200">
+            <Link href="/dashboard/family/booking" className="w-full bg-primary text-white py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 active:scale-95 shadow-lg shadow-primary/20">
+              <span className="material-symbols-outlined text-sm">add</span> New Booking
+            </Link>
+            <div className="mt-6 flex items-center gap-3 px-2">
+              <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-lg shrink-0">
+                {user.name ? user.name[0] : 'S'}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-bold truncate max-w-[120px]">{user.name || 'Saraswati Family'}</span>
+                <span className="text-[10px] text-slate-500 uppercase tracking-widest leading-tight">Admin Role</span>
+              </div>
             </div>
-            <div className="flex gap-4 items-center">
-              <button
-                onClick={handleSOS}
-                className={`flex items-center gap-2.5 px-6 py-3 rounded-[0.75rem] font-bold text-white transition-all shadow-md ${
-                  sosActive 
-                    ? 'bg-red-500 shadow-red-500/40 animate-pulse' 
-                    : 'bg-red-500 hover:bg-red-600 hover:shadow-lg hover:-translate-y-[1px] active:scale-95 active:translate-y-0'
-                }`}
-              >
-                <AlertTriangle size={20} className={sosActive ? "animate-bounce" : ""} /> 
-                {sosActive ? 'SOS SUBMITTED' : 'EMERGENCY SOS'}
-              </button>
+          </div>
+        </aside>
+
+        {/* Main Content Canvas */}
+        <main className="flex-1 overflow-y-auto custom-scrollbar bg-slate-50 px-4 md:px-8 xl:px-10 pt-8 pb-12 relative w-full">
+          
+          {/* Header Section */}
+          <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
+            <div>
+              <h2 className="font-headline text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">Monitoring Dashboard</h2>
+              <p className="text-slate-500 font-medium mt-1 text-lg">Real-time health telemetry & safety tracking for <span className="text-primary font-bold">Narayan Joshi</span></p>
+            </div>
+            <div className="flex gap-3 items-center">
+              <div className="flex items-center bg-white border border-slate-200 shadow-sm px-5 py-2.5 rounded-full text-xs font-bold text-slate-600 uppercase tracking-widest">
+                <span className="w-2.5 h-2.5 rounded-full bg-teal-500 mr-2 animate-pulse shadow-[0_0_8px_rgba(20,184,166,0.5)]"></span>
+                {activePin ? 'Live Sync Active' : 'Disconnected'}
+              </div>
             </div>
           </header>
 
-          {sosActive && (
-            <div className="mb-8 p-5 bg-red-50 border border-red-200 rounded-xl text-red-700 font-bold flex items-center gap-3 shadow-sm animate-fade-in">
-              <AlertTriangle size={24} className="text-red-500 animate-pulse" /> Emergency SOS Alert Triggered. Local authorities and caregivers notified.
-            </div>
-          )}
+          {/* Bento Grid Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            {/* Smart Alert Cards (Column Left) */}
+            <section className="lg:col-span-4 space-y-6">
+              <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-400 ml-2 mb-4">Live Alert Stream</h3>
+              
+              {/* Emergency SOS injected dynamically */}
+              {sosActive && (
+                <div className="bg-red-50 border-l-[6px] border-red-500 p-6 rounded-2xl flex gap-4 items-start shadow-md animate-in slide-in-from-left">
+                  <div className="bg-red-500 text-white p-2.5 rounded-full shrink-0 flex items-center justify-center shadow-lg shadow-red-500/40">
+                    <AlertTriangle size={24} className="animate-pulse" />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-lg text-red-900 leading-tight">EMERGENCY SOS</h4>
+                    <p className="text-sm text-red-800 font-medium mt-1">Caregiver has triggered the panic button. Establish contact immediately.</p>
+                    <span className="text-[10px] font-black text-red-600 uppercase mt-3 block tracking-widest">Sent from Active Device</span>
+                  </div>
+                </div>
+              )}
 
-          {/* ── Pairing Box ── */}
-          <div className="premium-card flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8 border-l-[6px] border-primary animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-            <div className="flex items-center gap-5">
-              <div className="p-3.5 bg-primary/10 rounded-2xl text-primary shadow-inner">
-                <Key size={26} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 tracking-tight">Caregiver Session Link</h3>
-                <p className="text-sm text-slate-500 font-medium">Enter the 4-digit PIN from your caregiver to start tracking.</p>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2 w-full md:w-auto">
-              <form onSubmit={connectToPin} className="flex gap-3">
-                <input
-                  type="text"
-                  value={roomPin}
-                  onChange={e => setRoomPin(e.target.value)}
-                  maxLength={4}
-                  placeholder="PIN"
-                  className="w-28 px-4 py-3 text-center text-xl font-bold tracking-widest border border-slate-200 rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 focus:bg-white"
-                />
-                <button type="submit" disabled={roomPin.length < 4} className="btn-medical btn-medical-primary">
-                  Connect
-                </button>
-              </form>
-              {activePin && <div className="text-xs font-bold text-green-600 flex items-center gap-1.5 px-2 py-1 bg-green-50 rounded-md animate-fade-in w-fit border border-green-100">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                Connected to Room {activePin}
-              </div>}
-            </div>
-          </div>
+              {/* Dynamic Meds Warning */}
+              {urgentMed ? (
+                <div className="bg-amber-50 border-l-[4px] border-amber-500 p-6 rounded-2xl flex gap-4 items-start shadow-sm hover:shadow-md transition-shadow">
+                  <div className="bg-amber-500 text-white p-2.5 rounded-full shrink-0">
+                    <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>medication</span>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm text-amber-900 uppercase tracking-widest">Medication Imminent</h4>
+                    <p className="text-xs text-amber-800 font-medium mt-1">{nextMed.label} Dosage required in {nextMed.minutesLeft} minutes.</p>
+                    <div className="flex gap-2 mt-4">
+                      <button className="bg-white px-4 py-1.5 rounded-full text-[10px] font-bold text-amber-700 shadow-sm hover:bg-slate-50 transition-colors uppercase tracking-widest border border-amber-200">Acknowledge</button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-slate-100 border-l-[4px] border-slate-300 p-5 rounded-2xl flex gap-4 items-start shadow-sm">
+                  <div className="bg-slate-300 text-white p-2.5 rounded-full shrink-0">
+                    <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>medication</span>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm text-slate-800 uppercase tracking-widest">Next Scheduled Med</h4>
+                    <p className="text-xs text-slate-500 font-medium mt-1">{nextMed.label} Dosage securely queued up in {nextMed.minutesLeft} mins.</p>
+                  </div>
+                </div>
+              )}
 
-          {/* ── Stats Row ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-            <div className="premium-card border-t-[5px] border-t-red-500">
-              <HeartRateWidget bpm={heartRate} />
-            </div>
-
-            <div className="premium-card border-t-[5px] border-t-green-600 flex flex-col justify-between">
-              <div>
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Active Care Provider</div>
-                <div className="text-2xl font-black text-slate-900 flex items-center gap-2 tracking-tight">
-                  {activePin ? 'Assigned Expert' : 'Awaiting Check-in'}
-                  {activePin && caregiverVerified && <span className="text-xl shrink-0" title="DGCare strictly verified">🛡️</span>}
+              {/* Normal Status mock log */}
+              <div className="bg-teal-50 border-l-[4px] border-primary p-5 rounded-2xl flex gap-4 items-start shadow-sm">
+                <div className="bg-primary text-white p-2.5 rounded-full shrink-0">
+                  <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-teal-900 uppercase tracking-widest">Morning Check-in</h4>
+                  <p className="text-xs text-teal-800 font-medium mt-1">Caregiver Priya Sharma confirmed breakfast & hydration at 08:30 AM.</p>
                 </div>
               </div>
-              {activePin && <div className="text-xs font-medium text-slate-500 mt-4 flex items-center gap-1.5"><Key size={12}/> PIN: {activePin} • Encrypted Live Signal</div>}
-            </div>
+            </section>
 
-            <div className="premium-card border-t-[5px] border-t-amber-500">
-              <NextMedWidget nextTime={nextMed.label} minutesLeft={nextMed.minutesLeft} />
-            </div>
+            {/* Health Graphs (Center/Main) */}
+            <section className="lg:col-span-8 grid grid-cols-2 gap-8">
+              
+              {/* Heart Rate Card */}
+              <div className="col-span-2 md:col-span-1 bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col justify-between">
+                <div className="flex justify-between items-start mb-8">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dynamic Heart Rate</span>
+                    <div className="flex items-baseline gap-1 mt-1">
+                      <span className="text-5xl font-headline font-black text-slate-800 tracking-tighter" style={{ fontVariantNumeric: 'tabular-nums' }}>{heartRate}</span>
+                      <span className="text-sm font-bold text-slate-400">BPM</span>
+                    </div>
+                  </div>
+                  <div className="bg-green-50 text-green-700 border border-green-200 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">Optimal</div>
+                </div>
+                
+                {/* Simulated ECG using dynamic height maps mapped to Tailwind */}
+                <div className="h-32 w-full flex items-end justify-between gap-1 px-1 border-b-2 border-slate-100 pb-2">
+                   {[4, 8, 5, 16, 5, 9, 4, 12, 6, 10, 4, 7, 5, 14, 5, 8, 4].map((h, i) => (
+                      <div
+                        key={i}
+                        className={`w-full rounded-sm ${h > 10 ? 'bg-error' : 'bg-primary'} opacity-80`}
+                        style={{
+                          height: `${(h/16)*100}%`,
+                          animation: `ecgPulse 1.2s ease-in-out ${i * 0.07}s infinite`
+                        }}
+                      />
+                   ))}
+                </div>
+                <div className="flex justify-between mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  <span>08:00</span>
+                  <span>10:00</span>
+                  <span className="text-primary flex items-center gap-1"><span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>Live</span>
+                </div>
+              </div>
+
+              {/* BP Card (Static Mock) */}
+              <div className="col-span-2 md:col-span-1 bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col justify-between">
+                <div className="flex justify-between items-start mb-8">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Blood Pressure</span>
+                    <div className="flex items-baseline gap-1 mt-1">
+                      <span className="text-5xl font-headline font-black text-slate-800 tracking-tighter" style={{ fontVariantNumeric: 'tabular-nums' }}>124/82</span>
+                      <span className="text-sm font-bold text-slate-400">mmHg</span>
+                    </div>
+                  </div>
+                  <div className="bg-slate-100 text-slate-600 border border-slate-200 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">Stable</div>
+                </div>
+                <div className="relative h-32 w-full flex items-center justify-center border-b-2 border-slate-100 pb-2">
+                  <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 200 100">
+                    <path className="text-slate-200" d="M0,50 Q25,30 50,50 T100,50 T150,50 T200,30" fill="none" stroke="currentColor" strokeWidth="2"></path>
+                    <path className="text-teal-500" d="M0,70 Q25,60 50,80 T100,70 T150,90 T200,60" fill="none" stroke="currentColor" strokeWidth="4" style={{ strokeLinecap: 'round' }}></path>
+                  </svg>
+                </div>
+                <div className="flex justify-between mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  <span>Mon</span><span>Tue</span><span>Wed</span><span>Live</span>
+                </div>
+              </div>
+
+              {/* Secure Handshake & Live Map Interface */}
+              <div className="col-span-2 relative h-[450px] rounded-[2rem] overflow-hidden shadow-2xl shadow-primary/10 border border-primary/20 bg-slate-900 group">
+                
+                {!activePin ? (
+                  /* Form UI Overlay when disconnected */
+                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-8 text-center bg-slate-900/80 backdrop-blur-sm">
+                    <div className="w-20 h-20 bg-primary/20 text-primary rounded-full flex items-center justify-center mb-6">
+                       <span className="material-symbols-outlined text-[40px]">security</span>
+                    </div>
+                    <h3 className="text-2xl font-black text-white mb-2 font-headline tracking-tight">Establish Encrypted Link</h3>
+                    <p className="text-slate-400 text-sm font-medium mb-8 max-w-sm">Enter the secure 4-digit PIN transmitted by your Care Provider to load live GPS telemetry.</p>
+                    <form onSubmit={connectToPin} className="flex gap-4">
+                      <input
+                        type="text"
+                        value={roomPin}
+                        onChange={e => setRoomPin(e.target.value)}
+                        maxLength={4}
+                        placeholder="PIN"
+                        className="w-32 px-4 py-4 text-center text-3xl font-black font-mono tracking-[0.2em] bg-white border-none rounded-2xl focus:ring-4 focus:ring-primary/50 text-slate-900 shadow-xl"
+                      />
+                      <button type="submit" disabled={roomPin.length < 4} className="px-10 py-4 bg-primary text-white font-bold rounded-2xl disabled:bg-slate-700 disabled:text-slate-400 hover:bg-primary-container hover:scale-105 active:scale-95 transition-all text-sm uppercase tracking-widest shadow-xl shadow-primary/30">
+                        Connect
+                      </button>
+                    </form>
+                  </div>
+                ) : (
+                  /* Live Map when Connected */
+                  <>
+                    <Map center={[19.0760, 72.8777]} role="family" roomCode={`room_${activePin}`} />
+                    
+                    {/* UI Floating Cards mimicking the layout design exactly */}
+                    <div className="absolute inset-0 flex flex-col pointer-events-none p-6 z-10 justify-between">
+                      <div className="bg-white/95 backdrop-blur-xl p-5 rounded-2xl shadow-2xl border border-white/50 w-72 pointer-events-auto transform transition-all hover:scale-[1.02]">
+                        <div className="flex items-center gap-4">
+                          <div className="relative">
+                            <div className="w-14 h-14 bg-primary text-white font-bold text-xl rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-md">
+                               P
+                            </div>
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full"></div>
+                          </div>
+                          <div>
+                            <h5 className="text-base font-black text-slate-800">Priya Sharma</h5>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">GNM Specialist</p>
+                          </div>
+                        </div>
+                        <div className="mt-5 pt-4 border-t border-slate-100 flex justify-between items-center">
+                          <span className="text-[10px] font-black text-primary uppercase tracking-widest">Room {activePin} Secure Tracking</span>
+                          <span className="flex gap-1">
+                            <span className="w-2 h-2 bg-primary rounded-full animate-bounce"></span>
+                            <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s'}}></span>
+                            <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.4s'}}></span>
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-end pointer-events-auto">
+                        <button className="bg-red-500 hover:bg-red-600 px-8 py-4 rounded-full text-white font-black text-sm uppercase tracking-widest shadow-xl shadow-red-500/40 flex items-center gap-3 transform hover:scale-105 active:scale-95 transition-all">
+                            <Phone size={18} />
+                            Emergency Dial
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+              </div>
+            </section>
           </div>
 
-          {/* ── Map ── */}
-          {activePin ? (
-            <div className="premium-card flex-1 flex flex-col p-6 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-              <h3 className="text-xl text-primary font-black mb-5 flex items-center gap-2 tracking-tight">
-                <MapPin size={22} className="text-primary" /> Caregiver Location Tracker
-              </h3>
-              <div className="flex-1 min-h-[400px] rounded-xl overflow-hidden border border-slate-100 shadow-inner">
-                <Map center={[19.0760, 72.8777]} role="family" roomCode={`room_${activePin}`} />
+          {/* Care Logs: Horizontal Strip */}
+          <section className="mt-12 pt-8 border-t border-slate-200">
+            <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-400 ml-2 mb-6">Encrypted Care Logs & History</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+              
+              <div className="bg-white shadow-sm p-6 rounded-2xl border border-slate-100 hover:border-teal-500 hover:shadow-lg transition-all group cursor-pointer">
+                <span className="text-[10px] font-bold text-slate-400 block mb-3 uppercase tracking-widest">07:30 AM</span>
+                <h6 className="font-extrabold text-base text-slate-800 group-hover:text-primary transition-colors">Vitals Logged</h6>
+                <div className="flex items-center gap-2 mt-3 bg-slate-50 w-max px-3 py-1.5 rounded-lg border border-slate-100">
+                  <span className="w-2 h-2 rounded-full bg-teal-500"></span>
+                  <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">All nominal</span>
+                </div>
               </div>
+
+              <div className="bg-white shadow-sm p-6 rounded-2xl border border-slate-100 hover:border-teal-500 hover:shadow-lg transition-all group cursor-pointer">
+                <span className="text-[10px] font-bold text-slate-400 block mb-3 uppercase tracking-widest">08:15 AM</span>
+                <h6 className="font-extrabold text-base text-slate-800 group-hover:text-primary transition-colors">Meal Interaction</h6>
+                <div className="flex items-center gap-2 mt-3 bg-slate-50 w-max px-3 py-1.5 rounded-lg border border-slate-100">
+                  <span className="w-2 h-2 rounded-full bg-teal-500"></span>
+                  <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">High protein</span>
+                </div>
+              </div>
+
+              <div className="bg-white shadow-sm p-6 rounded-2xl border border-red-200 hover:border-red-500 hover:shadow-lg transition-all group cursor-pointer bg-red-50/30">
+                <span className="text-[10px] font-bold text-red-400 block mb-3 uppercase tracking-widest">09:45 AM</span>
+                <h6 className="font-extrabold text-base text-red-900 group-hover:text-red-700 transition-colors">Safety Alert</h6>
+                <div className="flex items-center gap-2 mt-3 bg-red-50 w-max px-3 py-1.5 rounded-lg border border-red-100">
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                  <span className="text-[10px] font-bold text-red-700 uppercase tracking-widest">BP Warning Sent</span>
+                </div>
+              </div>
+
+              <div className="bg-white shadow-sm p-6 rounded-2xl border border-slate-100 hover:border-teal-500 hover:shadow-lg transition-all group cursor-pointer">
+                <span className="text-[10px] font-bold text-slate-400 block mb-3 uppercase tracking-widest">10:30 AM</span>
+                <h6 className="font-extrabold text-base text-slate-800 group-hover:text-primary transition-colors">Physical Therapy</h6>
+                <div className="flex items-center gap-2 mt-3 bg-amber-50 w-max px-3 py-1.5 rounded-lg border border-amber-100">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                  <span className="text-[10px] font-bold text-amber-700 uppercase tracking-widest">In Progress</span>
+                </div>
+              </div>
+
             </div>
-          ) : (
-            <div className="bg-white border-2 border-dashed border-slate-200 p-12 rounded-2xl text-center text-slate-400 flex flex-col items-center justify-center flex-1 min-h-[300px] animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-              <MapPin size={48} className="mb-4 opacity-50 text-slate-300" />
-              <p className="font-medium text-lg">Connect a Caregiver PIN to load live location mapping.</p>
-              <p className="text-sm mt-2 opacity-70">The map will automatically appear once connected.</p>
+          </section>
+
+          {/* Editorial Footer */}
+          <footer className="mt-20 pt-12 border-t border-slate-200 grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="col-span-2">
+              <span className="font-headline font-black text-slate-900 text-2xl tracking-tighter">DGCare</span>
+              <p className="text-[10px] font-bold text-slate-400 mt-2 max-w-xs leading-relaxed uppercase tracking-widest">
+                  Editorial Healthcare Excellence. Precision monitoring for peace of mind.
+              </p>
             </div>
-          )}
-        </div>
+            <div>
+              <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6 border-b border-slate-200 pb-2">Platform Legal</h5>
+              <ul className="space-y-3">
+                <li><a className="text-[10px] font-bold text-slate-500 hover:text-teal-600 transition-colors uppercase tracking-widest" href="#">Privacy Policy</a></li>
+                <li><a className="text-[10px] font-bold text-slate-500 hover:text-teal-600 transition-colors uppercase tracking-widest" href="#">Terms of Service</a></li>
+              </ul>
+            </div>
+            <div>
+              <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6 border-b border-slate-200 pb-2">Support</h5>
+              <ul className="space-y-3">
+                <li><a className="text-[10px] font-bold text-slate-500 hover:text-teal-600 transition-colors uppercase tracking-widest" href="#">Help Center</a></li>
+                <li><a className="text-[10px] font-bold text-slate-500 hover:text-teal-600 transition-colors uppercase tracking-widest" href="#">Contact Form</a></li>
+              </ul>
+            </div>
+          </footer>
+        </main>
       </div>
     </>
   );
