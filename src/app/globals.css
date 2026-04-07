@@ -73,3 +73,14 @@
   }
 }
 
+/* Backward Compatibility Aliases */
+:root {
+  --primary-green: #00665d;
+  --secondary-mint: #e5fffa;
+  --bg-white: #ffffff;
+  --text-dark: #191c1e;
+  --text-light: #505f76;
+  --border-light: #e2e8f0;
+  --accent-green: #15803d;
+}
+

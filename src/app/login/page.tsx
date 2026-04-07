@@ -16,36 +16,87 @@ export default function Login() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', backgroundColor: 'var(--primary-green)' }}>
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(20px, 5vh, 40px)' }}>
-        <div style={{ backgroundColor: 'var(--bg-white)', padding: '50px', borderRadius: '16px', width: '100%', maxWidth: '440px', boxShadow: '0 20px 40px rgba(0,0,0,0.25)' }}>
-          <h2 style={{ fontSize: '32px', color: 'var(--primary-green)', marginBottom: '8px', textAlign: 'center', fontWeight: 'bold' }}>Welcome Back</h2>
-          <p style={{ color: 'var(--text-light)', marginBottom: '32px', textAlign: 'center' }}>Log in to access your sanctuary for care.</p>
-          
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>Email Address</label>
-              <input type="email" required value={email} onChange={e => setEmail(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: '8px', border: '1px solid var(--border-light)' }} placeholder="alex@example.com" />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>Password</label>
-              <input type="password" required value={password} onChange={e => setPassword(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: '8px', border: '1px solid var(--border-light)' }} placeholder="••••••••" />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>I am a...</label>
-              <select value={role} onChange={e => setRole(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: '8px', border: '1px solid var(--border-light)' }}>
-                <option value="family">Family Member</option>
-                <option value="caregiver">Professional Caregiver</option>
-              </select>
-            </div>
-            <button type="submit" style={{ padding: '16px', backgroundColor: 'var(--primary-green)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '18px', marginTop: '16px', cursor: 'pointer', transition: 'background-color 0.2s' }}>
-              Sign In
-            </button>
-          </form>
-
-          <p style={{ marginTop: '20px', textAlign: 'center', color: 'var(--text-light)' }}>
-            Don't have an account? <Link href="/register" style={{ color: 'var(--primary-green)', fontWeight: 'bold' }}>Sign up</Link>
+    <div className="min-h-screen flex bg-primary/5">
+      {/* Visual Side (Hidden on Mobile) */}
+      <div className="hidden lg:flex flex-1 bg-primary relative overflow-hidden items-center justify-center p-20">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary-container/20 rounded-full blur-3xl -mr-48 -mt-48"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary-container/10 rounded-full blur-3xl -ml-48 -mb-48"></div>
+        
+        <div className="z-10 text-white max-w-lg">
+          <h1 className="text-6xl font-black mb-8 leading-tight tracking-tighter">Clinical Excellence, <br/>Curated Care.</h1>
+          <p className="text-xl text-primary-fixed opacity-90 leading-relaxed font-medium">
+            Welcome back to DGCare. Your sanctuary for professional healthcare monitoring and background-verified provider matching.
           </p>
+        </div>
+      </div>
+
+      {/* Form Side */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-surface">
+        <div className="w-full max-w-md">
+          <div className="mb-10 lg:hidden">
+            <span className="text-2xl font-black text-primary tracking-tighter">DGCare</span>
+          </div>
+
+          <div className="premium-card p-10 border border-slate-100">
+            <div className="mb-8">
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Welcome Back</h2>
+              <p className="text-slate-500 font-medium">Log in to your clinical monitoring dashboard.</p>
+            </div>
+            
+            <form onSubmit={handleLogin} className="flex flex-col gap-5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Email Address</label>
+                <input 
+                  type="email" 
+                  required 
+                  value={email} 
+                  onChange={e => setEmail(e.target.value)} 
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all outline-none"
+                  placeholder="name@company.com" 
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Password</label>
+                <input 
+                  type="password" 
+                  required 
+                  value={password} 
+                  onChange={e => setPassword(e.target.value)} 
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all outline-none"
+                  placeholder="••••••••" 
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Identity Role</label>
+                <select 
+                  value={role} 
+                  onChange={e => setRole(e.target.value)} 
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-primary transition-all outline-none"
+                >
+                  <option value="family">Family Member</option>
+                  <option value="caregiver">Professional Provider</option>
+                </select>
+              </div>
+              <button 
+                type="submit" 
+                className="w-full py-4 mt-4 bg-primary text-white font-bold rounded-xl hover:bg-primary-container shadow-lg shadow-primary/20 active:scale-[0.98] transition-all"
+              >
+                Sign In
+              </button>
+            </form>
+
+            <div className="mt-8 text-center pt-8 border-t border-slate-100">
+              <p className="text-slate-500 text-sm font-medium">
+                New to the platform? <Link href="/register" className="text-primary font-bold hover:underline">Create an Account</Link>
+              </p>
+            </div>
+          </div>
+          
+          <div className="mt-8 text-center">
+            <Link href="/" className="text-slate-400 text-xs font-bold hover:text-slate-600 transition-colors uppercase tracking-widest">
+              ← Return to DGCare Home
+            </Link>
+          </div>
         </div>
       </div>
     </div>

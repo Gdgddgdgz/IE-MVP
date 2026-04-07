@@ -17,42 +17,104 @@ export default function Register() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', backgroundColor: 'var(--secondary-mint)' }}>
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
-        <div style={{ backgroundColor: 'var(--bg-white)', padding: '50px', borderRadius: '16px', width: '100%', maxWidth: '500px', boxShadow: '0 20px 40px rgba(11,79,66,0.1)' }}>
-          <h2 style={{ fontSize: '32px', color: 'var(--primary-green)', marginBottom: '8px', textAlign: 'center', fontWeight: 'bold' }}>Create your account</h2>
-          <p style={{ color: 'var(--text-light)', marginBottom: '32px', textAlign: 'center' }}>Experience peace of mind with our curated care network.</p>
-          
-          <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                <div style={{ flex: '1 1 200px' }}>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>Full Name</label>
-                    <input type="text" required value={name} onChange={e => setName(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: '8px', border: '1px solid var(--border-light)' }} placeholder="Alex Smith" />
-                </div>
-                <div style={{ flex: '1 1 200px' }}>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>I am a...</label>
-                    <select value={role} onChange={e => setRole(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: '8px', border: '1px solid var(--border-light)' }}>
-                        <option value="family">Family Member</option>
-                        <option value="caregiver">Professional Caregiver</option>
-                    </select>
-                </div>
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>Email Address</label>
-              <input type="email" required value={email} onChange={e => setEmail(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: '8px', border: '1px solid var(--border-light)' }} placeholder="alex@example.com" />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>Password</label>
-              <input type="password" required value={password} onChange={e => setPassword(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: '8px', border: '1px solid var(--border-light)' }} placeholder="••••••••" />
-            </div>
-            <button type="submit" style={{ padding: '16px', backgroundColor: 'var(--primary-green)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '18px', marginTop: '16px', cursor: 'pointer', transition: 'background-color 0.2s' }}>
-              Create Account
-            </button>
-          </form>
-
-          <p style={{ marginTop: '24px', textAlign: 'center', color: 'var(--text-light)' }}>
-            Already have an account? <Link href="/login" style={{ color: 'var(--primary-green)', fontWeight: 'bold' }}>Log in</Link>
+    <div className="min-h-screen flex bg-primary/5">
+      {/* Visual Side (Hidden on Mobile) */}
+      <div className="hidden lg:flex flex-1 bg-primary relative overflow-hidden items-center justify-center p-20">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-primary-container/20 rounded-full blur-3xl -ml-48 -mt-48"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary-container/10 rounded-full blur-3xl -mr-48 -mb-48"></div>
+        
+        <div className="z-10 text-white max-w-lg">
+          <h1 className="text-6xl font-black mb-8 leading-tight tracking-tighter">Join the Elite <br/>Care Network.</h1>
+          <p className="text-xl text-primary-fixed opacity-90 leading-relaxed font-medium">
+            Whether you are seeking care for a loved one or providing professional expertise, DGCare is your platform for clinical excellence.
           </p>
+        </div>
+      </div>
+
+      {/* Form Side */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-surface">
+        <div className="w-full max-w-md">
+          <div className="mb-10 lg:hidden">
+            <span className="text-2xl font-black text-primary tracking-tighter">DGCare</span>
+          </div>
+
+          <div className="premium-card p-10 border border-slate-100">
+            <div className="mb-8">
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Create Account</h2>
+              <p className="text-slate-500 font-medium">Experience peace of mind with curated care.</p>
+            </div>
+            
+            <form onSubmit={handleRegister} className="flex flex-col gap-5">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Full Name</label>
+                  <input 
+                    type="text" 
+                    required 
+                    value={name} 
+                    onChange={e => setName(e.target.value)} 
+                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all outline-none"
+                    placeholder="Alex Smith" 
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Email Address</label>
+                <input 
+                  type="email" 
+                  required 
+                  value={email} 
+                  onChange={e => setEmail(e.target.value)} 
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all outline-none"
+                  placeholder="name@company.com" 
+                />
+              </div>
+              
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Password</label>
+                <input 
+                  type="password" 
+                  required 
+                  value={password} 
+                  onChange={e => setPassword(e.target.value)} 
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all outline-none"
+                  placeholder="••••••••" 
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">I am a...</label>
+                <select 
+                  value={role} 
+                  onChange={e => setRole(e.target.value)} 
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-primary transition-all outline-none"
+                >
+                  <option value="family">Family Member</option>
+                  <option value="caregiver">Professional Provider</option>
+                </select>
+              </div>
+
+              <button 
+                type="submit" 
+                className="w-full py-4 mt-4 bg-primary text-white font-bold rounded-xl hover:bg-primary-container shadow-lg shadow-primary/20 active:scale-[0.98] transition-all"
+              >
+                Create Account
+              </button>
+            </form>
+
+            <div className="mt-8 text-center pt-8 border-t border-slate-100">
+              <p className="text-slate-500 text-sm font-medium">
+                Already have an account? <Link href="/login" className="text-primary font-bold hover:underline">Log in</Link>
+              </p>
+            </div>
+          </div>
+          
+          <div className="mt-8 text-center">
+            <Link href="/" className="text-slate-400 text-xs font-bold hover:text-slate-600 transition-colors uppercase tracking-widest">
+              ← Return to DGCare Home
+            </Link>
+          </div>
         </div>
       </div>
     </div>
